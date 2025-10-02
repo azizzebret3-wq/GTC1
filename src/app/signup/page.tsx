@@ -29,6 +29,8 @@ import { Eye, EyeOff, ArrowRight, Loader } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createNotification, getAdminUserId } from "@/lib/firestore.service"
 
+export const dynamic = 'force-dynamic';
+
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

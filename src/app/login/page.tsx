@@ -29,6 +29,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
