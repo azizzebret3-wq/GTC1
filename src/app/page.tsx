@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from '@/hooks/useAuth.tsx';
@@ -13,12 +13,16 @@ import {
   CheckCircle,
   BrainCircuit,
   CalendarCheck,
-  BookOpen
+  BookOpen,
+  User,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -170,6 +174,33 @@ function HomePageContent() {
             </div>
           </section>
 
+          {/* How it Works Section */}
+          <section className="py-20 px-4">
+            <div className="container mx-auto">
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <h2 className="text-4xl font-black gradient-text">Comment ça marche ?</h2>
+                <p className="text-lg text-muted-foreground mt-4">Commencez votre préparation en 3 étapes simples.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center max-w-5xl mx-auto">
+                <div className="flex flex-col items-center">
+                  <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center font-black text-3xl mb-4">1</div>
+                  <h3 className="text-xl font-bold mb-2">Inscrivez-vous</h3>
+                  <p className="text-muted-foreground">Créez votre compte en moins d'une minute et choisissez le type de concours que vous préparez.</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center font-black text-3xl mb-4">2</div>
+                  <h3 className="text-xl font-bold mb-2">Entraînez-vous</h3>
+                  <p className="text-muted-foreground">Accédez à des milliers de questions, des concours blancs, et des ressources pédagogiques exclusives.</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center font-black text-3xl mb-4">3</div>
+                  <h3 className="text-xl font-bold mb-2">Progressez</h3>
+                  <p className="text-muted-foreground">Suivez vos résultats, identifiez vos faiblesses et maximisez vos chances de succès grâce à l'IA.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Features Section */}
           <section className="py-20 px-4 bg-background">
             <div className="container mx-auto">
@@ -194,9 +225,53 @@ function HomePageContent() {
               </div>
             </div>
           </section>
+          
+           {/* For Who Section */}
+          <section className="py-20 px-4">
+            <div className="container mx-auto">
+              <div className="text-center max-w-3xl mx-auto mb-12">
+                <h2 className="text-4xl font-black gradient-text">À qui s'adresse la plateforme ?</h2>
+                <p className="text-lg text-muted-foreground mt-4">Que vous soyez un nouvel aspirant ou un professionnel en quête d'évolution, nous avons ce qu'il vous faut.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <Card className="glassmorphism shadow-xl">
+                  <CardHeader>
+                    <div className="flex items-center gap-4 mb-2">
+                       <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-r from-green-500 to-teal-500 text-white">
+                          <User className="w-6 h-6" />
+                        </div>
+                        <CardTitle className="text-2xl font-bold">Concours Directs</CardTitle>
+                    </div>
+                    <CardDescription>Pour les étudiants et nouveaux diplômés qui visent une carrière dans la fonction publique.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Maîtrisez les bases de la culture générale, du droit, et plus encore.</span></p>
+                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Entraînez-vous sur des sujets d'annales et des questions inédites.</span></p>
+                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Préparez-vous mentalement avec nos simulations en conditions réelles.</span></p>
+                  </CardContent>
+                </Card>
+                <Card className="glassmorphism shadow-xl">
+                  <CardHeader>
+                    <div className="flex items-center gap-4 mb-2">
+                       <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-r from-sky-500 to-indigo-500 text-white">
+                          <Briefcase className="w-6 h-6" />
+                        </div>
+                        <CardTitle className="text-2xl font-bold">Concours Professionnels</CardTitle>
+                    </div>
+                    <CardDescription>Pour les fonctionnaires qui souhaitent faire évoluer leur carrière.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Approfondissez vos connaissances spécifiques à votre domaine.</span></p>
+                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Optimisez votre temps de révision avec nos résumés par IA.</span></p>
+                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Restez à jour sur les dernières réformes et textes de loi.</span></p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </section>
 
           {/* Pricing Section */}
-          <section className="py-20 px-4">
+          <section className="py-20 px-4 bg-background">
               <div className="container mx-auto">
                   <div className="text-center max-w-3xl mx-auto mb-12">
                       <h2 className="text-4xl font-black gradient-text">Un tarif simple et accessible</h2>
@@ -244,6 +319,42 @@ function HomePageContent() {
                       </Card>
                   </div>
               </div>
+          </section>
+
+          {/* FAQ Section */}
+          <section className="py-20 px-4">
+            <div className="container mx-auto max-w-3xl">
+               <div className="text-center max-w-3xl mx-auto mb-12">
+                  <h2 className="text-4xl font-black gradient-text">Questions fréquentes</h2>
+                  <p className="text-lg text-muted-foreground mt-4">Trouvez les réponses à vos interrogations.</p>
+              </div>
+              <Accordion type="single" collapsible className="w-full glassmorphism p-4 rounded-xl shadow-xl">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger>Comment le contenu des quiz et des cours est-il créé ?</AccordionTrigger>
+                  <AccordionContent>
+                    Notre contenu est une collaboration entre des experts des concours de la fonction publique et notre intelligence artificielle de pointe. Les experts définissent les thèmes et valident la pertinence, tandis que l'IA nous aide à générer une grande variété de questions et d'explications pédagogiques.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-2">
+                  <AccordionTrigger>Le paiement pour l'abonnement Premium est-il sécurisé ?</AccordionTrigger>
+                  <AccordionContent>
+                    Oui, absolument. Nous utilisons les services de paiement mobile les plus populaires et sécurisés au Burkina Faso (Orange Money, Moov). La transaction se fait directement via leurs interfaces. Après le paiement, vous envoyez simplement la preuve à notre équipe d'administration qui active votre compte.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-3">
+                  <AccordionTrigger>Puis-je utiliser la plateforme sur mon téléphone ?</AccordionTrigger>
+                  <AccordionContent>
+                    Oui ! La plateforme "Gagne ton concours" a été conçue pour être entièrement "responsive". Que vous soyez sur un ordinateur, une tablette ou un smartphone, l'expérience est optimisée pour votre écran.
+                  </AccordionContent>
+                </AccordionItem>
+                 <AccordionItem value="item-4">
+                  <AccordionTrigger>Que se passe-t-il si j'ai un problème technique ?</AccordionTrigger>
+                  <AccordionContent>
+                    Nous avons une équipe de support dédiée. Les membres Premium bénéficient d'un support prioritaire. Vous pouvez nous contacter directement via les liens WhatsApp présents sur la plateforme pour une assistance rapide.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </section>
 
           {/* Final CTA */}
@@ -300,7 +411,7 @@ export default function Home() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!loading && user) {
       router.push("/dashboard");
     }
