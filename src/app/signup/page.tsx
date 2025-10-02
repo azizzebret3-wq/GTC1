@@ -124,7 +124,10 @@ export default function SignupPage() {
         title: "Compte créé avec succès",
         description: "Vous allez être redirigé vers votre tableau de bord.",
       });
-      router.push("/dashboard");
+      
+      // Force a full page reload to the dashboard to ensure auth state is updated everywhere.
+      window.location.href = '/dashboard';
+
     } catch (error: any) {
       console.error(error);
       let errorMessage = "Une erreur est survenue lors de la création du compte.";
