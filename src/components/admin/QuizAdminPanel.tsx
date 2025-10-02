@@ -48,7 +48,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { InlineMath, BlockMath } from 'react-katex';
+import MathText from '@/components/math-text';
 
 const questionSchema = z.object({
   question: z.string().min(1, "La question est requise."),
@@ -114,7 +114,7 @@ const MathToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
           onClick={() => onInsert(latexSnippets[key])}
           aria-label={`Insérer ${key}`}
         >
-          <InlineMath math={latexSnippets[key].replace(/\{\}/g, '{•}').replace(/\\vec/g, '\\vec{F}')} />
+          <MathText text={latexSnippets[key].replace(/\{\}/g, '{•}').replace(/\\vec/g, '\\vec{F}')} />
         </Button>
       ))}
     </div>
@@ -261,7 +261,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                     />
                     <div className="p-4 bg-background rounded-md border min-h-[140px]">
                         <Label className="text-sm text-muted-foreground">Aperçu</Label>
-                        <div className="text-lg"><BlockMath math={watch(`questions.${qIndex}.question`) || ''} /></div>
+                        <div className="text-lg"><MathText text={watch(`questions.${qIndex}.question`) || ''} isBlock /></div>
                     </div>
                 </div>
                 {questionErrors?.question && <p className="text-red-500 text-xs mt-1">{questionErrors.question.message}</p>}
@@ -278,7 +278,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                     />
                     <div className="p-4 bg-background rounded-md border min-h-[140px]">
                         <Label className="text-sm text-muted-foreground">Aperçu</Label>
-                        <div className="text-base"><BlockMath math={watch(`questions.${qIndex}.explanation`) || ''} /></div>
+                        <div className="text-base"><MathText text={watch(`questions.${qIndex}.explanation`) || ''} isBlock /></div>
                     </div>
                 </div>
             </div>
@@ -302,7 +302,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                             <div className="flex-1 grid grid-cols-2 gap-2">
                                 <Input {...register(`questions.${qIndex}.options.${optionIndex}.value`)} placeholder={`Option ${optionIndex + 1}`} />
                                 <div className="p-2 border rounded-md bg-background text-sm flex items-center">
-                                    <InlineMath math={watch(`questions.${qIndex}.options.${optionIndex}.value`) || ''} />
+                                    <MathText text={watch(`questions.${qIndex}.options.${optionIndex}.value`) || ''} />
                                 </div>
                                 {questionErrors?.options?.[optionIndex]?.value && <p className="text-red-500 text-xs mt-1 col-span-2">{questionErrors.options[optionIndex].value.message}</p>}
                             </div>
