@@ -83,23 +83,47 @@ export default function AdminUsersPage() {
   }
 
   const handleSaveChanges = async () => {
-    if (!selectedUser || !newRole || !newSubscription) return;
+    if (!selectedUser) return;
+
     setIsSaving(true);
+    
     try {
-      // Update role
-      await updateUserRoleInFirestore(selectedUser.uid, newRole as 'admin' | 'user');
+      let roleUpdated = false;
+      let subscriptionUpdated = false;
+
+      // Update role if changed
+      if (newRole && newRole !== selectedUser.role) {
+        await updateUserRoleInFirestore(selectedUser.uid, newRole as 'admin' | 'user');
+        roleUpdated = true;
+      }
       
-      // Update subscription
-      const subType = newSubscription.startsWith('premium') ? 'premium' : 'gratuit';
-      const subTier = newSubscription === 'premium_mensuel' ? 'mensuel' : (newSubscription === 'premium_annuel' ? 'annuel' : null);
-      await updateUserSubscriptionInFirestore(selectedUser.uid, { type: subType, tier: subTier });
+      // Determine current subscription state
+      let currentSub: SubscriptionValue = 'gratuit';
+      if(selectedUser.subscription_type === 'premium') {
+          currentSub = selectedUser.subscription_tier === 'annuel' ? 'premium_annuel' : 'premium_mensuel';
+      }
+
+      // Update subscription if changed
+      if (newSubscription !== currentSub) {
+        const subType = newSubscription.startsWith('premium') ? 'premium' : 'gratuit';
+        const subTier = newSubscription === 'premium_mensuel' ? 'mensuel' : (newSubscription === 'premium_annuel' ? 'annuel' : null);
+        await updateUserSubscriptionInFirestore(selectedUser.uid, { type: subType, tier: subTier });
+        subscriptionUpdated = true;
+      }
       
-      toast({
-        title: 'Modifications enregistrées',
-        description: `Les informations de ${selectedUser.fullName} ont été mises à jour.`,
-      });
+      if(roleUpdated || subscriptionUpdated){
+        toast({
+          title: 'Modifications enregistrées',
+          description: `Les informations de ${selectedUser.fullName} ont été mises à jour.`,
+        });
+        await fetchUsers(); // Refresh user list
+      } else {
+         toast({
+          title: 'Aucun changement',
+          description: `Aucune modification n'a été détectée.`,
+        });
+      }
       
-      await fetchUsers(); // Refresh user list
       setIsDialogOpen(false);
     } catch (error) {
        toast({

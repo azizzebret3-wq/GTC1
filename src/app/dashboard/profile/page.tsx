@@ -51,6 +51,9 @@ export default function ProfilePage() {
             displayName: fullName,
          });
       }
+      
+      // Important: we call reloadUserData() which is part of our useAuth hook
+      // to refresh the user data everywhere in the app.
       await reloadUserData();
 
       toast({
@@ -161,7 +164,7 @@ export default function ProfilePage() {
               <div className="flex justify-end gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="rounded-lg h-11" disabled={isSaving}>Annuler</Button>
                 <Button type="submit" className="rounded-lg h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold shadow-lg" disabled={isSaving}>
-                  {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                  {isSaving ? <><Loader className="mr-2 h-4 w-4 animate-spin"/>Enregistrement...</> : <><Save className="h-4 w-4 mr-2"/>Enregistrer</>}
                 </Button>
               </div>
             )}

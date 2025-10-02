@@ -613,7 +613,7 @@ export default function QuizAdminPanel() {
           <CardDescription>{quizzes.length} quiz disponibles.</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading || isGenerating ? (
+          {isLoading ? (
             <div className="flex justify-center items-center h-64"><Loader className="w-10 h-10 animate-spin text-purple-500"/></div>
           ) : (
             <Table>
