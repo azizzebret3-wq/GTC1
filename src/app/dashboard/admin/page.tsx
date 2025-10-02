@@ -1,32 +1,12 @@
 // src/app/dashboard/admin/page.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth.tsx';
-import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, FileText, ClipboardList, BrainCircuit, ArrowRight, Settings } from 'lucide-react';
+import { Users, FileText, ClipboardList, ArrowRight, Settings } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { userData, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && userData?.role !== 'admin') {
-      router.push('/dashboard');
-    }
-  }, [userData, loading, router]);
-
-
-  if (loading || !userData || userData.role !== 'admin') {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-purple-500"></div>
-      </div>
-    );
-  }
   
   const adminLinks = [
       {

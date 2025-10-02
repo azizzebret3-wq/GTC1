@@ -193,8 +193,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <Button type="submit" className="w-full h-12 rounded-xl text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg group" disabled={loading}>
-                {loading ? <><Loader className="w-4 h-4 mr-2 animate-spin" /> Connexion...</> : "Se connecter"}
-                {!loading && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
+                {loading ? <><Loader className="w-4 h-4 mr-2 animate-spin" /> Connexion...</> : <>Se connecter <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" /></>}
               </Button>
             </form>
             <div className="mt-6 text-center text-sm font-medium text-gray-600">
