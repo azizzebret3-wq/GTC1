@@ -46,7 +46,7 @@ export async function generateQuiz(input: GenerateQuizInput): Promise<GenerateQu
 
 const prompt = ai.definePrompt({
   name: 'generateQuizPrompt',
-  model: googleAI.model('gemini-1.5-flash-latest'),
+  model: googleAI.model('gemini-1.5-pro-latest'),
   input: {schema: GenerateQuizInputSchema},
   output: {schema: GenerateQuizOutputSchema},
   prompt: `Vous êtes un expert pédagogue et un concepteur de programmes d'examen de classe mondiale, spécialisé dans la création de matériel pour des concours de haut niveau au Burkina Faso.
