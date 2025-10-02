@@ -13,7 +13,7 @@ import {
   Rocket,
   Loader,
   BrainCircuit,
-  Wand,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -168,11 +168,11 @@ export default function QuizzesPage() {
                 placeholder="Ex: La révolution de 1983 au Burkina Faso..."
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                disabled={true}
+                disabled={isGenerating}
                 className="h-11 text-base rounded-lg flex-1"
               />
               <div className="flex w-full md:w-auto gap-4">
-                <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled={true}>
+                <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled={isGenerating}>
                     <SelectTrigger className="h-11 text-base rounded-lg w-full">
                         <SelectValue />
                     </SelectTrigger>
@@ -184,7 +184,7 @@ export default function QuizzesPage() {
                         <SelectItem value="50">50 Questions</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={true}>
+                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating}>
                     <SelectTrigger className="h-11 text-base rounded-lg w-full">
                         <SelectValue />
                     </SelectTrigger>
@@ -197,11 +197,11 @@ export default function QuizzesPage() {
               </div>
             <Button
               type="submit"
-              disabled={true}
+              disabled={isGenerating || !topic.trim()}
               className="w-full md:w-auto h-11 text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg"
             >
-                <Wand className="w-5 h-5 mr-3" />
-                Bientôt disponible
+              {isGenerating ? <Loader className="w-5 h-5 mr-3 animate-spin" /> : <Sparkles className="w-5 h-5 mr-3" />}
+              {isGenerating ? 'Génération...' : 'Générer & Lancer'}
             </Button>
           </form>
         </CardContent>

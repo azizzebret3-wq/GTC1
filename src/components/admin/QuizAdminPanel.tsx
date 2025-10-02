@@ -7,7 +7,7 @@ import { useForm, useFieldArray, Controller, FormProvider, useFormContext } from
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, WandSparkles
+  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -122,7 +122,7 @@ const MathToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
 };
 
 
-function AiGeneratorDialog({ open, onOpenChange, onGenerate }: { open: boolean, onOpenChange: (open: boolean) => void, onGenerate: (topic: string, numQuestions: number, difficulty: 'facile' | 'moyen' | 'difficile') => void }) {
+function AiGeneratorDialog({ open, onOpenChange, onGenerate, isGenerating }: { open: boolean, onOpenChange: (open: boolean) => void, onGenerate: (topic: string, numQuestions: number, difficulty: 'facile' | 'moyen' | 'difficile') => void, isGenerating: boolean }) {
     const [topic, setTopic] = useState('');
     const [numQuestions, setNumQuestions] = useState('10');
     const [difficulty, setDifficulty] = useState<'facile' | 'moyen' | 'difficile'>('moyen');
@@ -149,13 +149,13 @@ function AiGeneratorDialog({ open, onOpenChange, onGenerate }: { open: boolean, 
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                             placeholder="Ex: La révolution de 1983 au Burkina Faso"
-                            disabled={true}
+                            disabled={isGenerating}
                         />
                     </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="ai-num-questions">Nombre de questions</Label>
-                             <Select value={numQuestions} onValueChange={setNumQuestions} disabled={true}>
+                             <Select value={numQuestions} onValueChange={setNumQuestions} disabled={isGenerating}>
                                 <SelectTrigger id="ai-num-questions">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -170,7 +170,7 @@ function AiGeneratorDialog({ open, onOpenChange, onGenerate }: { open: boolean, 
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="ai-difficulty">Difficulté</Label>
-                            <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={true}>
+                            <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating}>
                                 <SelectTrigger id="ai-difficulty">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -184,8 +184,11 @@ function AiGeneratorDialog({ open, onOpenChange, onGenerate }: { open: boolean, 
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={true}>Annuler</Button>
-                    <Button onClick={handleGenerate} disabled={true}>Bientôt disponible</Button>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isGenerating}>Annuler</Button>
+                    <Button onClick={handleGenerate} disabled={isGenerating || !topic}>
+                        {isGenerating ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                        {isGenerating ? 'Génération...' : 'Générer'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -553,7 +556,6 @@ export default function QuizAdminPanel() {
   };
 
   const handleGenerateQuiz = async (topic: string, numQuestions: number, difficulty: 'facile' | 'moyen' | 'difficile') => {
-    setIsAiGeneratorOpen(false);
     setIsGenerating(true);
     try {
       const result: GenerateQuizOutput = await generateQuiz({ topic, numberOfQuestions: numQuestions, difficulty });
@@ -575,6 +577,7 @@ export default function QuizAdminPanel() {
       });
       
       toast({ title: "Quiz généré !", description: `Un quiz sur "${topic}" a été créé. Veuillez le vérifier avant de l'enregistrer.`});
+      setIsAiGeneratorOpen(false);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur de génération', description: "L'IA n'a pas pu générer le quiz." });
     } finally {
@@ -672,7 +675,7 @@ export default function QuizAdminPanel() {
         </DialogContent>
       </Dialog>
     </div>
-    <AiGeneratorDialog open={isAiGeneratorOpen} onOpenChange={setIsAiGeneratorOpen} onGenerate={handleGenerateQuiz} />
+    <AiGeneratorDialog open={isAiGeneratorOpen} onOpenChange={setIsAiGeneratorOpen} onGenerate={handleGenerateQuiz} isGenerating={isGenerating} />
     </>
   );
 }
