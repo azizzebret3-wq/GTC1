@@ -252,7 +252,7 @@ export default function DocumentsPage() {
         <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle className="gradient-text text-2xl">{summary?.title}</AlertDialogTitle>
-                <AlertDialogDescription>Voici le résumé généré par l'intelligence artificielle :</AlertDialogDescription>
+                <AlertDialogDescription>Voici le résumé du document :</AlertDialogDescription>
             </AlertDialogHeader>
             {isSummarizing && !summary?.content ? (
                 <div className="flex items-center justify-center h-24">

@@ -14,6 +14,7 @@ import {
   Loader,
   BrainCircuit,
   Sparkles,
+  Wand,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,44 +78,8 @@ export default function QuizzesPage() {
   
   const handleGenerateAndStart = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if(!canGenerate){
-      router.push('/dashboard/premium');
-      return;
-    }
-
-    if (!topic.trim()) {
-      toast({
-        title: 'Sujet manquant',
-        description: 'Veuillez entrer un sujet pour générer le quiz.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const result: GenerateQuizOutput = await generateQuiz({ topic, numberOfQuestions: parseInt(numberOfQuestions), difficulty });
-      
-      sessionStorage.setItem('generatedQuiz', JSON.stringify(result.quiz));
-      
-      toast({
-        title: 'Quiz généré avec succès !',
-        description: 'Vous allez être redirigé pour commencer le quiz.',
-      });
-
-      router.push('/dashboard/take-quiz?source=generated');
-
-    } catch (error) {
-      console.error('Failed to generate quiz:', error);
-      toast({
-        title: 'Erreur de génération',
-        description: "L'IA n'a pas pu générer le quiz. Veuillez réessayer.",
-        variant: 'destructive',
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    // This feature is disabled for now
+    toast({ title: 'Indisponible', description: 'Cette fonctionnalité sera bientôt disponible.'});
   };
 
 
@@ -164,7 +129,7 @@ export default function QuizzesPage() {
                 <BrainCircuit className="w-5 h-5 text-white" />
             </div>
             <div>
-                <CardTitle className="gradient-text font-black">Générateur de Quiz IA</CardTitle>
+                <CardTitle className="gradient-text font-black">Générateur de Quiz</CardTitle>
                 <CardDescription className="font-semibold">Entraînez-vous sur n'importe quel sujet, instantanément.</CardDescription>
             </div>
           </div>
@@ -174,13 +139,11 @@ export default function QuizzesPage() {
               <Input
                 id="topic"
                 placeholder="Ex: La révolution de 1983 au Burkina Faso..."
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                disabled={isGenerating}
+                disabled
                 className="h-11 text-base rounded-lg flex-1"
               />
               <div className="flex w-full md:w-auto gap-4">
-                <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled={isGenerating}>
+                <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled>
                     <SelectTrigger className="h-11 text-base rounded-lg w-full">
                         <SelectValue />
                     </SelectTrigger>
@@ -192,7 +155,7 @@ export default function QuizzesPage() {
                         <SelectItem value="50">50 Questions</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating}>
+                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled>
                     <SelectTrigger className="h-11 text-base rounded-lg w-full">
                         <SelectValue />
                     </SelectTrigger>
@@ -208,18 +171,16 @@ export default function QuizzesPage() {
                 <TooltipTrigger asChild>
                     <Button
                     type="submit"
-                    disabled={isGenerating || !topic.trim()}
+                    disabled
                     className="w-full md:w-auto h-11 text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                    {isGenerating ? <Loader className="w-5 h-5 mr-3 animate-spin" /> : (canGenerate ? <Sparkles className="w-5 h-5 mr-3" /> : <Crown className="w-5 h-5 mr-3 text-yellow-300" />)}
-                    {isGenerating ? 'Génération...' : (canGenerate ? 'Générer & Lancer' : 'Premium Requis')}
+                     <Wand className="w-5 h-5 mr-3" />
+                     Bientôt disponible
                     </Button>
                 </TooltipTrigger>
-                {!canGenerate && (
-                    <TooltipContent>
-                        <p>Passez Premium pour générer des quiz avec l'IA.</p>
-                    </TooltipContent>
-                )}
+                 <TooltipContent>
+                    <p>Cette fonctionnalité est en cours de développement.</p>
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </form>

@@ -238,7 +238,7 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">Entraînez-vous sur un sujet spécifique en générant un quiz instantanément grâce à l'intelligence artificielle.</p>
+              <p className="text-sm text-muted-foreground mb-4">Entraînez-vous sur un sujet spécifique en générant un quiz instantanément.</p>
                <Link href="/dashboard/quizzes" passHref>
                   <Button className="font-semibold rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg">
                     <Sparkles className="w-4 h-4 mr-2" />
