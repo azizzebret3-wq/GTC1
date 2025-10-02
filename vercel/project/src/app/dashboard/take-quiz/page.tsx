@@ -12,7 +12,7 @@ import { CheckCircle, XCircle, Clock, Info, Award, Activity, Loader, ArrowLeft, 
 import { getQuizzesFromFirestore, Quiz, saveAttemptToFirestore } from '@/lib/firestore.service';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth.tsx';
-import { InlineMath, BlockMath } from 'react-katex';
+import { InlineMath, BlockMath } from 'katex-for-next';
 
 type ActiveQuiz = Omit<Quiz, 'id'> & { id: string };
 
@@ -237,7 +237,7 @@ function TakeQuizComponent() {
           {results.map((result, index) => (
             <Card key={index} className="glassmorphism shadow-lg border-l-4" style={{borderColor: result.isCorrect ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))'}}>
               <CardContent className="p-6 space-y-3">
-                <div className="font-bold">{index + 1}. <BlockMath math={result.question} /></div>
+                <div className="font-bold">{index + 1}. <BlockMath>{result.question}</BlockMath></div>
                 <div className="space-y-2">
                   {result.options.map(option => {
                     const isSelected = result.selectedAnswers.includes(option);
@@ -256,7 +256,7 @@ function TakeQuizComponent() {
                         ) : (
                              isCorrect && <CheckCircle className="w-5 h-5 text-green-500 opacity-50" />
                         )}
-                        <span className={className}><InlineMath math={option} /></span>
+                        <span className={className}><InlineMath>{option}</InlineMath></span>
                       </div>
                     );
                   })}
@@ -264,7 +264,7 @@ function TakeQuizComponent() {
                 {result.explanation && (
                   <div className="mt-2 p-3 text-sm rounded-lg bg-blue-50 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 flex items-start gap-2">
                     <Info className="w-4 h-4 mt-0.5 shrink-0" />
-                    <div><strong>Explication :</strong> <BlockMath math={result.explanation} /></div>
+                    <div><strong>Explication :</strong> <BlockMath>{result.explanation}</BlockMath></div>
                   </div>
                 )}
               </CardContent>
@@ -300,7 +300,7 @@ function TakeQuizComponent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="text-lg font-semibold"><BlockMath math={currentQuestion.question} /></div>
+            <div className="text-lg font-semibold"><BlockMath>{currentQuestion.question}</BlockMath></div>
             <div className="space-y-3">
               {currentQuestion.options.map((option, index) => (
                  <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-white/50 dark:bg-black/20 hover:bg-purple-50 dark:hover:bg-purple-900/50 transition-all">
@@ -310,14 +310,14 @@ function TakeQuizComponent() {
                         onCheckedChange={() => handleAnswerChange(option)}
                     />
                     <Label htmlFor={`option-${index}`} className="font-medium flex-1 cursor-pointer">
-                        <InlineMath math={option} />
+                        <InlineMath>{option}</InlineMath>
                     </Label>
                  </div>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center">
+             <div className="text-xs text-muted-foreground text-center">
               Cette question peut avoir une ou plusieurs bonnes réponses.
-            </p>
+            </div>
             <div className="flex justify-between gap-4">
               <Button onClick={handlePreviousQuestion} variant="outline" disabled={currentQuestionIndex === 0}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
