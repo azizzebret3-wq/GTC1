@@ -53,7 +53,7 @@ export default function LoginPage() {
         title: "Connexion réussie",
         description: "Vous allez être redirigé vers votre tableau de bord.",
       });
-      router.push("/dashboard");
+      window.location.href = '/dashboard';
     } catch (error: any) {
       console.error(error);
       let description = "Numéro de téléphone ou mot de passe incorrect.";
