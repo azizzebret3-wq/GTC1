@@ -89,7 +89,7 @@ export default function DocumentsPage() {
         const result = await summarizeTrainingContent({ documentUrl: doc.url });
         setSummary({ title: doc.title, content: result.summary });
     } catch(e) {
-        toast({ variant: 'destructive', title: 'Erreur IA', description: 'Le résumé n\'a pas pu être généré.'});
+        toast({ variant: 'destructive', title: 'Erreur de résumé', description: 'Le résumé n\'a pas pu être généré.'});
         setSummary(null); // Close dialog on error
     } finally {
         setIsSummarizing(false);

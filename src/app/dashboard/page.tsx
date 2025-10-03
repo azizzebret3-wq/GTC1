@@ -242,7 +242,7 @@ export default function Dashboard() {
                <Link href="/dashboard/quizzes" passHref>
                   <Button className="font-semibold rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg">
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Générer un Quiz
+                    Accéder au générateur
                   </Button>
                 </Link>
             </CardContent>

@@ -14,7 +14,6 @@ import {
   Loader,
   BrainCircuit,
   Sparkles,
-  Wand,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,8 +77,36 @@ export default function QuizzesPage() {
   
   const handleGenerateAndStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This feature is disabled for now
-    toast({ title: 'Indisponible', description: 'Cette fonctionnalité sera bientôt disponible.'});
+    if (!canGenerate) {
+      router.push('/dashboard/premium');
+      return;
+    }
+    if (!topic.trim()) {
+        toast({ title: 'Sujet requis', description: 'Veuillez entrer un sujet pour générer un quiz.'});
+        return;
+    }
+
+    setIsGenerating(true);
+    toast({ title: 'Génération en cours...', description: 'Votre quiz personnalisé est en cours de création.' });
+    
+    try {
+        const result: GenerateQuizOutput = await generateQuiz({ 
+            topic, 
+            numberOfQuestions: parseInt(numberOfQuestions, 10), 
+            difficulty 
+        });
+
+        // Store generated quiz in session storage
+        sessionStorage.setItem('generatedQuiz', JSON.stringify(result.quiz));
+
+        toast({ title: 'Quiz généré !', description: 'Vous allez être redirigé.' });
+        router.push('/dashboard/take-quiz?source=generated');
+
+    } catch (error) {
+        console.error("Quiz generation error:", error);
+        toast({ variant: 'destructive', title: 'Erreur de génération', description: 'Le quiz n\'a pas pu être généré. Veuillez réessayer.' });
+        setIsGenerating(false);
+    }
   };
 
 
@@ -139,11 +166,13 @@ export default function QuizzesPage() {
               <Input
                 id="topic"
                 placeholder="Ex: La révolution de 1983 au Burkina Faso..."
-                disabled
+                disabled={isGenerating || !canGenerate}
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
                 className="h-11 text-base rounded-lg flex-1"
               />
               <div className="flex w-full md:w-auto gap-4">
-                <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled>
+                <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled={isGenerating || !canGenerate}>
                     <SelectTrigger className="h-11 text-base rounded-lg w-full">
                         <SelectValue />
                     </SelectTrigger>
@@ -155,7 +184,7 @@ export default function QuizzesPage() {
                         <SelectItem value="50">50 Questions</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled>
+                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating || !canGenerate}>
                     <SelectTrigger className="h-11 text-base rounded-lg w-full">
                         <SelectValue />
                     </SelectTrigger>
@@ -171,16 +200,16 @@ export default function QuizzesPage() {
                 <TooltipTrigger asChild>
                     <Button
                     type="submit"
-                    disabled
+                    disabled={isGenerating || !canGenerate}
                     className="w-full md:w-auto h-11 text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                     <Wand className="w-5 h-5 mr-3" />
-                     Bientôt disponible
+                     {isGenerating ? <Loader className="w-5 h-5 mr-3 animate-spin"/> : (canGenerate ? <Sparkles className="w-5 h-5 mr-3" /> : <Crown className="w-5 h-5 mr-3" />) }
+                     {isGenerating ? 'Génération...' : (canGenerate ? 'Générer' : 'Premium')}
                     </Button>
                 </TooltipTrigger>
-                 <TooltipContent>
-                    <p>Cette fonctionnalité est en cours de développement.</p>
-                </TooltipContent>
+                 {!canGenerate && <TooltipContent>
+                    <p>Passez Premium pour générer des quiz.</p>
+                </TooltipContent>}
               </Tooltip>
             </TooltipProvider>
           </form>
