@@ -18,7 +18,7 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function TiktokFloat() {
-    const tiktokLink = "https://www.tiktok.com/@prepare.concours?_t=ZM-8zfqR0jZffk&_r=1";
+    const tiktokLink = "https://www.tiktok.com/@gagneton.concours?_t=ZM-8zfqR0jZffk&_r=1";
 
     return (
         <Link 
