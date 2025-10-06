@@ -7,7 +7,7 @@ import { useForm, useFieldArray, Controller, FormProvider, useFormContext } from
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles
+  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, Shuffle
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import {
   saveQuizToFirestore,
   updateQuizInFirestore,
   NewQuizData,
+  QuizQuestion,
 } from '@/lib/firestore.service';
 import { generateQuiz, GenerateQuizOutput } from '@/ai/flows/generate-dynamic-quizzes';
 import {
@@ -49,6 +50,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import MathText from '@/components/math-text';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const questionSchema = z.object({
   question: z.string().min(1, "La question est requise."),
@@ -195,8 +197,75 @@ function AiGeneratorDialog({ open, onOpenChange, onGenerate, isGenerating }: { o
     )
 }
 
+function ShuffleDialog({ open, onOpenChange, onGenerate, isGenerating, allQuestions }: { open: boolean, onOpenChange: (open: boolean) => void, onGenerate: (numQuestions: number, categories: string[], difficulties: string[]) => void, isGenerating: boolean, allQuestions: QuizQuestion[] }) {
+    const [numQuestions, setNumQuestions] = useState(10);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([]);
+    
+    const availableCategories = [...new Set(allQuestions.map(q => (q as any).category).filter(Boolean))];
+    const availableDifficulties = ['facile', 'moyen', 'difficile'];
+
+    const handleCategoryToggle = (category: string) => {
+        setSelectedCategories(prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]);
+    }
+    const handleDifficultyToggle = (difficulty: string) => {
+        setSelectedDifficulties(prev => prev.includes(difficulty) ? prev.filter(d => d !== difficulty) : [...prev, d]);
+    }
+
+    const handleGenerate = () => {
+        onGenerate(numQuestions, selectedCategories, selectedDifficulties);
+    }
+    
+    return (
+         <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Mélanger depuis la banque</DialogTitle>
+                    <DialogDescription>
+                        Créez un quiz en piochant des questions existantes.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                     <div className="space-y-2">
+                        <Label>Nombre de questions</Label>
+                        <Input type="number" value={numQuestions} onChange={e => setNumQuestions(Math.min(50, Number(e.target.value)))} max={50} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Catégories (optionnel)</Label>
+                        <ScrollArea className="h-32 border rounded-md p-2">
+                           <div className="space-y-2">
+                            {availableCategories.map(cat => (
+                                <div key={cat} className="flex items-center space-x-2">
+                                    <Checkbox id={`cat-${cat}`} checked={selectedCategories.includes(cat)} onCheckedChange={() => handleCategoryToggle(cat)} />
+                                    <Label htmlFor={`cat-${cat}`} className="font-normal">{cat}</Label>
+                                </div>
+                            ))}
+                            </div>
+                        </ScrollArea>
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Difficultés (optionnel)</Label>
+                        <div className="flex gap-2 flex-wrap">
+                            {availableDifficulties.map(diff => (
+                                <Button key={diff} variant={selectedDifficulties.includes(diff) ? 'default' : 'outline'} onClick={() => handleDifficultyToggle(diff)} className="capitalize">{diff}</Button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+                    <Button onClick={handleGenerate} disabled={isGenerating}>
+                         {isGenerating ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Shuffle className="w-4 h-4 mr-2" />}
+                        Générer
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuestion: (index: number) => void }) {
-    const { control, register, watch, setValue, getValues, formState: { errors } } = useFormContext<QuizFormData>();
+    const { control, register, watch, setValue, formState: { errors } } = useFormContext<QuizFormData>();
     
     const { fields: options, append: appendOption, remove: removeOption } = useFieldArray({
         control,
@@ -315,7 +384,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
     )
 }
 
-const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog }: { onFormSubmit: (data: QuizFormData) => void, handleCloseDialog: () => void, handleOpenAiDialog: () => void }) => {
+const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleOpenShuffleDialog }: { onFormSubmit: (data: QuizFormData) => void, handleCloseDialog: () => void, handleOpenAiDialog: () => void, handleOpenShuffleDialog: () => void }) => {
     const { control, register, handleSubmit, watch, formState: { errors, isSubmitting } } = useFormContext<QuizFormData>();
     const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control, name: "questions" });
     const isMockExam = watch("isMockExam");
@@ -382,12 +451,15 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog }: { onF
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Questions</h3>
-                    <div>
-                        <Button type="button" variant="outline" size="sm" onClick={handleOpenAiDialog}>
-                            <BrainCircuit className="w-4 h-4 mr-2"/> Générer avec l'IA
+                    <div className="flex gap-2">
+                         <Button type="button" variant="outline" size="sm" onClick={handleOpenShuffleDialog}>
+                            <Shuffle className="w-4 h-4 mr-2"/> Mélanger
                         </Button>
-                        <Button type="button" size="sm" className="ml-2" onClick={() => appendQuestion({ question: '', options: [{ value: '' }, { value: '' }], correctAnswers: [], explanation: '' })}>
-                            <PlusCircle className="w-4 h-4 mr-2"/> Ajouter Question
+                        <Button type="button" variant="outline" size="sm" onClick={handleOpenAiDialog}>
+                            <BrainCircuit className="w-4 h-4 mr-2"/> Générer (IA)
+                        </Button>
+                        <Button type="button" size="sm" onClick={() => appendQuestion({ question: '', options: [{ value: '' }, { value: '' }], correctAnswers: [], explanation: '' })}>
+                            <PlusCircle className="w-4 h-4 mr-2"/> Ajouter
                         </Button>
                     </div>
                 </div>
@@ -418,9 +490,11 @@ export default function QuizAdminPanel() {
   const router = useRouter();
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [allQuestions, setAllQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isQuizFormOpen, setIsQuizFormOpen] = useState(false);
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
+  const [isShuffleOpen, setIsShuffleOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
 
@@ -445,6 +519,8 @@ export default function QuizAdminPanel() {
     try {
       const fetchedQuizzes = await getQuizzesFromFirestore();
       setQuizzes(fetchedQuizzes);
+      const allQs = fetchedQuizzes.flatMap(q => q.questions.map(question => ({...question, category: q.category, difficulty: q.difficulty})));
+      setAllQuestions(allQs);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les quiz.' });
     } finally {
@@ -584,6 +660,45 @@ export default function QuizAdminPanel() {
       setIsGenerating(false);
     }
   };
+
+  const handleShuffleFromBank = (numQuestions: number, categories: string[], difficulties: string[]) => {
+      setIsGenerating(true);
+      let filteredQuestions = allQuestions;
+
+      if(categories.length > 0) {
+          filteredQuestions = filteredQuestions.filter(q => categories.includes((q as any).category));
+      }
+      if(difficulties.length > 0) {
+          filteredQuestions = filteredQuestions.filter(q => difficulties.includes((q as any).difficulty));
+      }
+
+      if(filteredQuestions.length < numQuestions) {
+          toast({ variant: 'destructive', title: 'Pas assez de questions', description: `Seulement ${filteredQuestions.length} questions correspondent à vos critères.` });
+          setIsGenerating(false);
+          return;
+      }
+      
+      const shuffled = filteredQuestions.sort(() => 0.5 - Math.random());
+      const selectedQuestions = shuffled.slice(0, numQuestions);
+
+      reset({
+          ...formMethods.getValues(),
+          title: `Quiz Mélangé (${new Date().toLocaleDateString()})`,
+          description: `Un quiz de ${numQuestions} questions sur ${categories.join(', ')}`,
+          category: 'Mixte',
+          difficulty: 'moyen',
+          questions: selectedQuestions.map(q => ({
+              question: q.question,
+              options: q.options.map(opt => ({ value: opt })),
+              correctAnswers: q.correctAnswers,
+              explanation: q.explanation || '',
+          })),
+      });
+      
+      toast({ title: "Quiz mélangé !", description: `${numQuestions} questions ont été ajoutées au formulaire.`});
+      setIsShuffleOpen(false);
+      setIsGenerating(false);
+  }
   
   return (
     <>
@@ -670,12 +785,14 @@ export default function QuizAdminPanel() {
                 onFormSubmit={onFormSubmit}
                 handleCloseDialog={handleCloseDialog}
                 handleOpenAiDialog={() => setIsAiGeneratorOpen(true)}
+                handleOpenShuffleDialog={() => setIsShuffleOpen(true)}
             />
           </FormProvider>
         </DialogContent>
       </Dialog>
     </div>
     <AiGeneratorDialog open={isAiGeneratorOpen} onOpenChange={setIsAiGeneratorOpen} onGenerate={handleGenerateQuiz} isGenerating={isGenerating} />
+    <ShuffleDialog open={isShuffleOpen} onOpenChange={setIsShuffleOpen} onGenerate={handleShuffleFromBank} isGenerating={isGenerating} allQuestions={allQuestions} />
     </>
   );
 }
