@@ -22,8 +22,9 @@ const premiumFeatures = [
 ];
 
 const mobileMoneyOptions = [
-    { name: "Orange Money", instruction: (amount: number) => `*144*2*1*75204647*${amount}#`, logo: "/logos/orange-money.svg" },
-    { name: "Moov Money", instruction: (amount: number) => `*555*2*1*50586160*${amount}#`, logo: "/logos/moov-money.svg" },
+    { name: "Orange Money", instruction: (amount: number) => `*144*2*1*54808048*${amount}#`},
+    { name: "Moov Money", instruction: (amount: number) => `*555*2*1*54808048*${amount}#`},
+    { name: "Wave", instruction: (amount: number) => `22654808048`},
 ];
 
 const adminContacts = [
@@ -134,40 +135,21 @@ export default function PremiumPage() {
           <CardContent className="space-y-6">
             <div className="p-6 rounded-lg border bg-background/50">
                 <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><Wallet className="w-5 h-5 text-primary"/>Étape 1 : Effectuez le paiement</h3>
-                <p className="text-muted-foreground mb-4">Choisissez votre méthode de paiement préférée ci-dessous.</p>
+                <p className="text-muted-foreground mb-4">Choisissez votre méthode de paiement préférée ci-dessous (pour l'abonnement mensuel de 1000F ou annuel de 5000F).</p>
                 
-                {/* Paydunia Button */}
-                <Button 
-                    asChild 
-                    className="w-full h-14 mb-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold"
-                >
-                    <Link href="https://paydunia.net/p/YOUR_PAYMENT_LINK" target="_blank">
-                        Payer avec Paydunia
-                        <ArrowRight className="w-5 h-5 ml-2"/>
-                    </Link>
-                </Button>
-
-                {/* Other payment methods */}
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger>Autres moyens de paiement (Mobile Money)</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-3 pt-4">
-                          {mobileMoneyOptions.map(method => (
-                              <div key={method.name} className="flex items-center justify-between p-3 rounded-lg bg-background/60 border">
-                                  <span className="font-semibold">{method.name}</span>
-                                  <div className="flex items-center gap-2">
-                                      <code className="text-sm font-mono bg-muted px-2 py-1 rounded">{method.instruction(1000).replace('1000', 'Montant')}</code>
-                                      <Button size="icon" variant="ghost" onClick={() => copyToClipboard(method.instruction(1000), method.name)}>
-                                          <Copy className="w-4 h-4"/>
-                                      </Button>
-                                  </div>
-                              </div>
-                          ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                <div className="space-y-3 pt-4">
+                    {mobileMoneyOptions.map(method => (
+                        <div key={method.name} className="flex items-center justify-between p-3 rounded-lg bg-background/60 border">
+                            <span className="font-semibold">{method.name}</span>
+                            <div className="flex items-center gap-2">
+                                <code className="text-sm font-mono bg-muted px-2 py-1 rounded">{method.name === 'Wave' ? method.instruction(1000) : method.instruction(1000).replace('1000', 'Montant')}</code>
+                                <Button size="icon" variant="ghost" onClick={() => copyToClipboard(method.instruction(1000), method.name)}>
+                                    <Copy className="w-4 h-4"/>
+                                </Button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <div className="p-6 rounded-lg border bg-background/50">
