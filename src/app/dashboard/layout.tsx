@@ -28,6 +28,7 @@ import {
   ClipboardList,
   BrainCircuit,
   CheckCheck,
+  Download,
 } from 'lucide-react';
 import { useTheme } from "next-themes"
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,34 @@ export default function DashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+  
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = () => {
+    if (!installPrompt) {
+      return;
+    }
+    installPrompt.prompt();
+    installPrompt.userChoice.then((choiceResult: { outcome: 'accepted' | 'dismissed' }) => {
+      if (choiceResult.outcome === 'accepted') {
+        toast({ title: 'Installation réussie !', description: 'L\'application a été ajoutée à votre écran d\'accueil.' });
+      }
+      setInstallPrompt(null);
+    });
+  };
 
   const fetchNotifications = useCallback(async () => {
     if (user) {
@@ -358,6 +387,12 @@ export default function DashboardLayout({
                         <Link href="/dashboard/settings" passHref>
                             <DropdownMenuItem><Settings className="w-4 h-4 mr-2" />Paramètres</DropdownMenuItem>
                         </Link>
+                        {installPrompt && (
+                          <DropdownMenuItem onClick={handleInstallClick}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Installer l'App
+                          </DropdownMenuItem>
+                        )}
                         {!isAdmin && !isPremium && (
                             <>
                             <DropdownMenuSeparator />
@@ -500,6 +535,12 @@ export default function DashboardLayout({
                                     <Sparkles className="w-4 h-4 ml-2" />
                                 </Button>
                             </Link>
+                        )}
+                         {installPrompt && (
+                           <Button onClick={handleInstallClick} className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold rounded-2xl p-4 shadow-lg">
+                                <Download className="w-5 h-5 mr-3" />
+                                Installer l'Application
+                            </Button>
                         )}
                         <Link href="/dashboard/settings">
                             <Button variant="ghost" className="w-full justify-start text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-xl p-4">
