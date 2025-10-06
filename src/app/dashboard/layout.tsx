@@ -39,6 +39,14 @@ import { Logo } from '@/components/logo';
 import WhatsAppFloat from '@/components/whatsapp-float';
 import TiktokFloat from '@/components/tiktok-float';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AppNotification, getUserNotifications, markAllNotificationsAsRead } from '@/lib/firestore.service';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -322,22 +330,52 @@ export default function DashboardLayout({
                   <span className="sr-only">Toggle theme</span>
                 </Button>
 
-                <div className="hidden md:flex items-center gap-3">
-                  <Avatar className="w-9 h-9 ring-2 ring-white/50 shadow-lg hover-lift">
-                    <AvatarImage src={userData?.photoURL ?? undefined} />
-                    <AvatarFallback className="bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold">
-                       {getInitials(userData?.fullName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-left hidden lg:block">
-                    <p className="font-bold text-foreground text-sm">
-                       {userData?.fullName?.split(' ')[0] || 'Utilisateur'}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {isAdmin ? '👑 Admin' : (isPremium ? '🌟 Premium' : '🆓 Gratuit')}
-                    </p>
-                  </div>
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <div className="hidden md:flex items-center gap-3 cursor-pointer">
+                            <Avatar className="w-9 h-9 ring-2 ring-white/50 shadow-lg hover-lift">
+                                <AvatarImage src={userData?.photoURL ?? undefined} />
+                                <AvatarFallback className="bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold">
+                                {getInitials(userData?.fullName)}
+                                </AvatarFallback>
+                            </Avatar>
+                             <div className="text-left hidden lg:block">
+                                <p className="font-bold text-foreground text-sm">
+                                {userData?.fullName?.split(' ')[0] || 'Utilisateur'}
+                                </p>
+                                <p className="text-xs text-muted-foreground font-medium">
+                                {isAdmin ? '👑 Admin' : (isPremium ? '🌟 Premium' : '🆓 Gratuit')}
+                                </p>
+                            </div>
+                        </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <Link href="/dashboard/profile" passHref>
+                            <DropdownMenuItem><UserIcon className="w-4 h-4 mr-2" />Mon Profil</DropdownMenuItem>
+                        </Link>
+                        <Link href="/dashboard/settings" passHref>
+                            <DropdownMenuItem><Settings className="w-4 h-4 mr-2" />Paramètres</DropdownMenuItem>
+                        </Link>
+                        {!isAdmin && !isPremium && (
+                            <>
+                            <DropdownMenuSeparator />
+                            <Link href="/dashboard/premium" passHref>
+                                <DropdownMenuItem className="text-purple-600 focus:text-purple-600">
+                                <Crown className="w-4 h-4 mr-2" />
+                                Passer Premium
+                                </DropdownMenuItem>
+                            </Link>
+                            </>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Se déconnecter
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 <Button
                   variant="ghost"
