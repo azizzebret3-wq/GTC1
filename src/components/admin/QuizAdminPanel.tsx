@@ -209,7 +209,7 @@ function ShuffleDialog({ open, onOpenChange, onGenerate, isGenerating, allQuesti
         setSelectedCategories(prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]);
     }
     const handleDifficultyToggle = (difficulty: string) => {
-        setSelectedDifficulties(prev => prev.includes(difficulty) ? prev.filter(d => d !== difficulty) : [...prev, d]);
+        setSelectedDifficulties(prev => prev.includes(difficulty) ? prev.filter(d => d !== difficulty) : [...prev, difficulty]);
     }
 
     const handleGenerate = () => {
