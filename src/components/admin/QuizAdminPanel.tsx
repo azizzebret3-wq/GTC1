@@ -220,9 +220,9 @@ function ShuffleDialog({ open, onOpenChange, onGenerate, isGenerating, allQuesti
          <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Mélanger depuis la banque</DialogTitle>
+                    <DialogTitle>Créer un Quiz sur Mesure</DialogTitle>
                     <DialogDescription>
-                        Créez un quiz en piochant des questions existantes.
+                        Composez un quiz personnalisé en piochant des questions de la banque.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -256,7 +256,7 @@ function ShuffleDialog({ open, onOpenChange, onGenerate, isGenerating, allQuesti
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
                     <Button onClick={handleGenerate} disabled={isGenerating}>
                          {isGenerating ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Shuffle className="w-4 h-4 mr-2" />}
-                        Générer
+                        Créer le quiz
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -453,7 +453,7 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
                     <h3 className="text-lg font-semibold">Questions</h3>
                     <div className="flex gap-2">
                          <Button type="button" variant="outline" size="sm" onClick={handleOpenShuffleDialog}>
-                            <Shuffle className="w-4 h-4 mr-2"/> Mélanger
+                            <Shuffle className="w-4 h-4 mr-2"/> Sur Mesure
                         </Button>
                         <Button type="button" variant="outline" size="sm" onClick={handleOpenAiDialog}>
                             <BrainCircuit className="w-4 h-4 mr-2"/> Générer (IA)
@@ -683,7 +683,7 @@ export default function QuizAdminPanel() {
 
       reset({
           ...formMethods.getValues(),
-          title: `Quiz Mélangé (${new Date().toLocaleDateString()})`,
+          title: `Quiz sur mesure (${new Date().toLocaleDateString()})`,
           description: `Un quiz de ${numQuestions} questions sur ${categories.join(', ')}`,
           category: 'Mixte',
           difficulty: 'moyen',
@@ -695,7 +695,7 @@ export default function QuizAdminPanel() {
           })),
       });
       
-      toast({ title: "Quiz mélangé !", description: `${numQuestions} questions ont été ajoutées au formulaire.`});
+      toast({ title: "Quiz sur mesure créé !", description: `${numQuestions} questions ont été ajoutées au formulaire.`});
       setIsShuffleOpen(false);
       setIsGenerating(false);
   }
