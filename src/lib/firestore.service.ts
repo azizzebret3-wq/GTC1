@@ -3,16 +3,17 @@ import { db } from './firebase';
 import { collection, addDoc, getDocs, QueryDocumentSnapshot, DocumentData, Timestamp, doc, updateDoc, query, where, orderBy, deleteDoc, serverTimestamp, getDoc, writeBatch, limit } from 'firebase/firestore';
 
 // Define the structure of a Quiz document
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswers: string[];
+  explanation?: string;
+}
 export interface Quiz {
   id?: string;
   title: string;
   description: string;
-  questions: Array<{
-    question: string;
-    options: string[];
-    correctAnswers: string[];
-    explanation?: string;
-  }>;
+  questions: Array<QuizQuestion>;
   category: string;
   difficulty: 'facile' | 'moyen' | 'difficile';
   access_type: 'gratuit' | 'premium';

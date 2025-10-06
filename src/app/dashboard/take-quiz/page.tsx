@@ -44,7 +44,8 @@ function TakeQuizComponent() {
     
     setQuizFinished(true);
 
-    if (searchParams.get('source') === 'generated') {
+    const quizSource = searchParams.get('source');
+    if (quizSource === 'generated' || quizSource === 'quick-practice') {
       sessionStorage.removeItem('generatedQuiz');
     }
     
@@ -75,8 +76,8 @@ function TakeQuizComponent() {
     const totalQuestions = quiz.questions.length;
     
     try {
-        if(quiz.id && quiz.id.startsWith('generated-')) {
-          // Do not save attempt for AI-generated quizzes as they have no persistent ID
+      if (quizSource === 'generated' || quizSource === 'quick-practice') {
+          // Do not save attempt for dynamically generated quizzes as they have no persistent ID
         } else {
            await saveAttemptToFirestore({
               userId: user.uid,
@@ -105,7 +106,7 @@ function TakeQuizComponent() {
       let loadedQuizData: Quiz | null = null;
 
       try {
-        if (sourceParam === 'generated') {
+        if (sourceParam === 'generated' || sourceParam === 'quick-practice') {
           const quizDataString = sessionStorage.getItem('generatedQuiz');
           if (quizDataString) {
             loadedQuizData = JSON.parse(quizDataString) as Quiz;

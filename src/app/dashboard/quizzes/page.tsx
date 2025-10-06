@@ -14,6 +14,7 @@ import {
   Loader,
   BrainCircuit,
   Sparkles,
+  Shuffle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
+import { getQuizzesFromFirestore, Quiz, QuizQuestion } from '@/lib/firestore.service';
 import { generateQuiz, GenerateQuizOutput } from '@/ai/flows/generate-dynamic-quizzes';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -109,6 +110,39 @@ export default function QuizzesPage() {
     }
   };
 
+  const handleQuickPractice = () => {
+    const freeQuestions = quizzes
+      .filter(q => q.access_type === 'gratuit' || canGenerate)
+      .flatMap(q => q.questions);
+
+    if (freeQuestions.length < 5) {
+      toast({
+        title: 'Pas assez de questions',
+        description: 'Il n\'y a pas assez de questions disponibles pour créer un entraînement rapide.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const shuffled = freeQuestions.sort(() => 0.5 - Math.random());
+    const selectedQuestions = shuffled.slice(0, 15);
+
+    const quickQuiz: Quiz = {
+      title: "Entraînement Rapide",
+      description: "Une session de questions aléatoires pour tester vos connaissances.",
+      category: "Mixte",
+      difficulty: "moyen",
+      access_type: "gratuit",
+      duration_minutes: 15,
+      total_questions: selectedQuestions.length,
+      questions: selectedQuestions,
+      createdAt: new Date(),
+    };
+    
+    sessionStorage.setItem('generatedQuiz', JSON.stringify(quickQuiz));
+    router.push('/dashboard/take-quiz?source=quick-practice');
+  };
+
 
   const handleFilterChange = (type: string, value: string) => {
     setFilters(prev => ({ ...prev, [type]: value }));
@@ -148,76 +182,106 @@ export default function QuizzesPage() {
         </div>
       </div>
       
-      {/* AI Quiz Generator */}
-       <Card className="w-full glassmorphism shadow-xl">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
-                <BrainCircuit className="w-5 h-5 text-white" />
-            </div>
-            <div>
-                <CardTitle className="gradient-text font-black">Générateur de Quiz</CardTitle>
-                <CardDescription className="font-semibold">Entraînez-vous sur n'importe quel sujet, instantanément.</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleGenerateAndStart} className="flex flex-col md:flex-row items-center gap-4">
-              <Input
-                id="topic"
-                placeholder="Ex: La révolution de 1983 au Burkina Faso..."
-                disabled={isGenerating || !canGenerate}
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="h-11 text-base rounded-lg flex-1"
-              />
-              <div className="flex w-full md:w-auto gap-4">
-                <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled={isGenerating || !canGenerate}>
-                    <SelectTrigger className="h-11 text-base rounded-lg w-full">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="10">10 Questions</SelectItem>
-                        <SelectItem value="20">20 Questions</SelectItem>
-                        <SelectItem value="30">30 Questions</SelectItem>
-                        <SelectItem value="40">40 Questions</SelectItem>
-                        <SelectItem value="50">50 Questions</SelectItem>
-                    </SelectContent>
-                </Select>
-                 <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating || !canGenerate}>
-                    <SelectTrigger className="h-11 text-base rounded-lg w-full">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="facile">Facile</SelectItem>
-                        <SelectItem value="moyen">Moyen</SelectItem>
-                        <SelectItem value="difficile">Difficile</SelectItem>
-                    </SelectContent>
-                </Select>
+      {/* Generators */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="w-full glassmorphism shadow-xl">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
+                  <BrainCircuit className="w-5 h-5 text-white" />
               </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                    type="submit"
-                    disabled={isGenerating || !canGenerate}
-                    className="w-full md:w-auto h-11 text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                     {isGenerating ? <Loader className="w-5 h-5 mr-3 animate-spin"/> : (canGenerate ? <Sparkles className="w-5 h-5 mr-3" /> : <Crown className="w-5 h-5 mr-3" />) }
-                     {isGenerating ? 'Génération...' : (canGenerate ? 'Générer' : 'Premium')}
-                    </Button>
-                </TooltipTrigger>
-                 {!canGenerate && <TooltipContent>
-                    <p>Passez Premium pour générer des quiz.</p>
-                </TooltipContent>}
-              </Tooltip>
-            </TooltipProvider>
-          </form>
-        </CardContent>
-      </Card>
+              <div>
+                  <CardTitle className="gradient-text font-black">Générateur par IA</CardTitle>
+                  <CardDescription className="font-semibold">Sujet spécifique, quiz instantané.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleGenerateAndStart} className="space-y-4">
+                <Input
+                  id="topic"
+                  placeholder="Ex: La révolution de 1983 au Burkina..."
+                  disabled={isGenerating || !canGenerate}
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  className="h-11 text-base rounded-lg"
+                />
+                <div className="flex gap-2">
+                  <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled={isGenerating || !canGenerate}>
+                      <SelectTrigger className="h-11 text-base rounded-lg w-full">
+                          <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="10">10 Questions</SelectItem>
+                          <SelectItem value="20">20 Questions</SelectItem>
+                          <SelectItem value="30">30 Questions</SelectItem>
+                          <SelectItem value="40">40 Questions</SelectItem>
+                          <SelectItem value="50">50 Questions</SelectItem>
+                      </SelectContent>
+                  </Select>
+                  <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating || !canGenerate}>
+                      <SelectTrigger className="h-11 text-base rounded-lg w-full">
+                          <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="facile">Facile</SelectItem>
+                          <SelectItem value="moyen">Moyen</SelectItem>
+                          <SelectItem value="difficile">Difficile</SelectItem>
+                      </SelectContent>
+                  </Select>
+                </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button
+                      type="submit"
+                      disabled={isGenerating || !canGenerate}
+                      className="w-full h-11 text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                      {isGenerating ? <Loader className="w-5 h-5 mr-3 animate-spin"/> : (canGenerate ? <Sparkles className="w-5 h-5 mr-3" /> : <Crown className="w-5 h-5 mr-3" />) }
+                      {isGenerating ? 'Génération...' : (canGenerate ? 'Générer (IA)' : 'Premium')}
+                      </Button>
+                  </TooltipTrigger>
+                  {!canGenerate && <TooltipContent>
+                      <p>Passez Premium pour générer des quiz.</p>
+                  </TooltipContent>}
+                </Tooltip>
+              </TooltipProvider>
+            </form>
+          </CardContent>
+        </Card>
+        <Card className="w-full glassmorphism shadow-xl flex flex-col">
+           <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-green-500 rounded-lg flex items-center justify-center shadow-md">
+                  <Shuffle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                  <CardTitle className="gradient-text font-black">Entraînement Rapide</CardTitle>
+                  <CardDescription className="font-semibold">Questions aléatoires, révision express.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col justify-center items-center text-center">
+            <p className="text-muted-foreground mb-4">Lancez une session de 15 questions tirées au hasard de notre banque de quiz pour un test rapide.</p>
+             <Button
+                onClick={handleQuickPractice}
+                disabled={isLoadingQuizzes}
+                className="w-full h-11 text-base font-bold bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700 text-white shadow-lg"
+              >
+                <Rocket className="w-5 h-5 mr-3"/>
+                Démarrer une session
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
 
       <Card className="glassmorphism shadow-xl p-4">
+        <CardHeader className="p-2 pt-0">
+            <CardTitle>Bibliothèque de Quiz</CardTitle>
+            <CardDescription>Parcourez nos quiz préparés par des experts.</CardDescription>
+        </CardHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="relative sm:col-span-2 lg:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
