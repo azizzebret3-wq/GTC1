@@ -45,11 +45,6 @@ export default function QuizzesPage() {
     difficulty: 'all',
     access: 'all',
   });
-  
-  const [topic, setTopic] = useState('');
-  const [numberOfQuestions, setNumberOfQuestions] = useState('10');
-  const [difficulty, setDifficulty] = useState<'facile' | 'moyen' | 'difficile'>('moyen');
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const isPremium = userData?.subscription_type === 'premium';
   const isAdmin = userData?.role === 'admin';
@@ -76,39 +71,6 @@ export default function QuizzesPage() {
     fetchQuizzes();
   }, [toast]);
   
-  const handleGenerateAndStart = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canGenerate) {
-      router.push('/dashboard/premium');
-      return;
-    }
-    if (!topic.trim()) {
-        toast({ title: 'Sujet requis', description: 'Veuillez entrer un sujet pour générer un quiz.'});
-        return;
-    }
-
-    setIsGenerating(true);
-    toast({ title: 'Génération en cours...', description: 'Votre quiz personnalisé est en cours de création.' });
-    
-    try {
-        const result: GenerateQuizOutput = await generateQuiz({ 
-            topic, 
-            numberOfQuestions: parseInt(numberOfQuestions, 10), 
-            difficulty 
-        });
-
-        // Store generated quiz in session storage
-        sessionStorage.setItem('generatedQuiz', JSON.stringify(result.quiz));
-
-        toast({ title: 'Quiz généré !', description: 'Vous allez être redirigé.' });
-        router.push('/dashboard/take-quiz?source=generated');
-
-    } catch (error) {
-        console.error("Quiz generation error:", error);
-        toast({ variant: 'destructive', title: 'Erreur de génération', description: 'Le quiz n\'a pas pu être généré. Veuillez réessayer.' });
-        setIsGenerating(false);
-    }
-  };
 
   const handleQuickPractice = () => {
     const freeQuestions = quizzes
@@ -183,74 +145,7 @@ export default function QuizzesPage() {
       </div>
       
       {/* Generators */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="w-full glassmorphism shadow-xl">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
-                  <BrainCircuit className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                  <CardTitle className="gradient-text font-black">Générateur par IA</CardTitle>
-                  <CardDescription className="font-semibold">Sujet spécifique, quiz instantané.</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleGenerateAndStart} className="space-y-4">
-                <Input
-                  id="topic"
-                  placeholder="Ex: La révolution de 1983 au Burkina..."
-                  disabled={isGenerating || !canGenerate}
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="h-11 text-base rounded-lg"
-                />
-                <div className="flex gap-2">
-                  <Select value={numberOfQuestions} onValueChange={setNumberOfQuestions} disabled={isGenerating || !canGenerate}>
-                      <SelectTrigger className="h-11 text-base rounded-lg w-full">
-                          <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="10">10 Questions</SelectItem>
-                          <SelectItem value="20">20 Questions</SelectItem>
-                          <SelectItem value="30">30 Questions</SelectItem>
-                          <SelectItem value="40">40 Questions</SelectItem>
-                          <SelectItem value="50">50 Questions</SelectItem>
-                      </SelectContent>
-                  </Select>
-                  <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating || !canGenerate}>
-                      <SelectTrigger className="h-11 text-base rounded-lg w-full">
-                          <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="facile">Facile</SelectItem>
-                          <SelectItem value="moyen">Moyen</SelectItem>
-                          <SelectItem value="difficile">Difficile</SelectItem>
-                      </SelectContent>
-                  </Select>
-                </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                      <Button
-                      type="submit"
-                      disabled={isGenerating || !canGenerate}
-                      className="w-full h-11 text-base font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
-                      >
-                      {isGenerating ? <Loader className="w-5 h-5 mr-3 animate-spin"/> : (canGenerate ? <Sparkles className="w-5 h-5 mr-3" /> : <Crown className="w-5 h-5 mr-3" />) }
-                      {isGenerating ? 'Génération...' : (canGenerate ? 'Générer (IA)' : 'Premium')}
-                      </Button>
-                  </TooltipTrigger>
-                  {!canGenerate && <TooltipContent>
-                      <p>Passez Premium pour générer des quiz.</p>
-                  </TooltipContent>}
-                </Tooltip>
-              </TooltipProvider>
-            </form>
-          </CardContent>
-        </Card>
-        <Card className="w-full glassmorphism shadow-xl flex flex-col">
+       <Card className="w-full glassmorphism shadow-xl">
            <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-green-500 rounded-lg flex items-center justify-center shadow-md">
@@ -262,19 +157,18 @@ export default function QuizzesPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center items-center text-center">
-            <p className="text-muted-foreground mb-4">Lancez une session de 15 questions tirées au hasard de notre banque de quiz pour un test rapide.</p>
+          <CardContent className="flex-1 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
+            <p className="text-muted-foreground md:max-w-xl">Lancez une session de 15 questions tirées au hasard de notre banque de quiz pour un test rapide de vos connaissances générales.</p>
              <Button
                 onClick={handleQuickPractice}
                 disabled={isLoadingQuizzes}
-                className="w-full h-11 text-base font-bold bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700 text-white shadow-lg"
+                className="w-full md:w-auto h-11 text-base font-bold bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700 text-white shadow-lg"
               >
                 <Rocket className="w-5 h-5 mr-3"/>
                 Démarrer une session
             </Button>
           </CardContent>
         </Card>
-      </div>
 
 
       <Card className="glassmorphism shadow-xl p-4">
