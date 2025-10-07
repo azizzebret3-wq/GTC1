@@ -13,7 +13,6 @@ import {
   FileText,
   Video,
   Loader,
-  BrainCircuit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,17 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { LibraryDocument, getDocumentsFromFirestore } from '@/lib/firestore.service';
-import { summarizeTrainingContent } from '@/ai/flows/summarize-training-content';
 import { useRouter } from 'next/navigation';
 
 export default function DocumentsPage() {
@@ -51,9 +41,6 @@ export default function DocumentsPage() {
     category: 'all',
     type: 'all',
   });
-
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [summary, setSummary] = useState<{title: string, content: string} | null>(null);
 
    useEffect(() => {
     const fetchDocuments = async () => {
@@ -77,24 +64,6 @@ export default function DocumentsPage() {
   const handleFilterChange = (type: string, value: string) => {
     setFilters(prev => ({ ...prev, [type]: value }));
   };
-
-  const handleSummarize = async (doc: LibraryDocument) => {
-    if(doc.type !== 'pdf') {
-        toast({ title: 'Info', description: 'Le résumé est uniquement disponible pour les documents PDF.'});
-        return;
-    }
-    setIsSummarizing(true);
-    setSummary({ title: doc.title, content: '' }); // Open dialog with loading state
-    try {
-        const result = await summarizeTrainingContent({ documentUrl: doc.url });
-        setSummary({ title: doc.title, content: result.summary });
-    } catch(e) {
-        toast({ variant: 'destructive', title: 'Erreur de résumé', description: 'Le résumé n\'a pas pu être généré.'});
-        setSummary(null); // Close dialog on error
-    } finally {
-        setIsSummarizing(false);
-    }
-  }
 
   const filteredDocuments = documents.filter(doc => {
     return (
@@ -168,8 +137,8 @@ export default function DocumentsPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredDocuments.map(doc => {
-              const canSummarize = (isPremium || isAdmin) && doc.type === 'pdf';
               const Icon = doc.type === 'pdf' ? FileText : Video;
+              const canAccess = isAdmin || doc.access_type === 'gratuit' || isPremium;
               
               return (
                 <Card key={doc.id} className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 flex flex-col">
@@ -195,43 +164,33 @@ export default function DocumentsPage() {
                       {doc.category}
                     </Badge>
                   </CardContent>
-                  <div className="p-3 bg-white/20 grid grid-cols-2 gap-2">
-                     <Button 
-                      className={`w-full font-bold text-white rounded-lg h-10 text-sm ${
-                        doc.access_type === 'premium' && !isPremium 
-                          ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
+                  <Button 
+                      className={`w-full font-bold text-white rounded-t-none h-12 text-sm ${
+                        !canAccess
+                          ? 'bg-gradient-to-r from-gray-400 to-gray-500'
                           : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'
                       }`}
-                      disabled={doc.access_type === 'premium' && !isPremium}
-                      asChild
+                      onClick={(e) => {
+                         e.preventDefault();
+                         if (canAccess) {
+                            window.open(doc.url, '_blank');
+                         } else {
+                            router.push('/dashboard/premium');
+                         }
+                      }}
                     >
-                      <Link href={doc.access_type === 'premium' && !isPremium ? '#' : doc.url} target="_blank" rel="noopener noreferrer">
-                        {doc.access_type === 'premium' && !isPremium ? (
-                          <>
-                            <Lock className="w-4 h-4 mr-2" />
-                            Premium
-                          </>
-                        ) : (
-                          <>
-                            {doc.type === 'pdf' ? 'Consulter' : 'Visionner'}
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                          </>
-                        )}
-                      </Link>
-                    </Button>
-                    <Button
-                        onClick={() => canSummarize ? handleSummarize(doc) : router.push('/dashboard/premium')}
-                        disabled={isSummarizing && summary?.title === doc.title}
-                        className={`w-full font-bold rounded-lg h-10 text-sm ${
-                            canSummarize
-                            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
-                            : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-                        }`}
-                        >
-                        { canSummarize ? <BrainCircuit className="w-4 h-4 mr-2"/> : <Crown className="w-4 h-4 mr-2 text-yellow-500"/>}
-                        Résumer
-                    </Button>
-                  </div>
+                      {!canAccess ? (
+                        <>
+                          <Lock className="w-4 h-4 mr-2" />
+                          Premium
+                        </>
+                      ) : (
+                        <>
+                          {doc.type === 'pdf' ? 'Consulter' : 'Visionner'}
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                  </Button>
                 </Card>
               );
             })}
@@ -247,27 +206,6 @@ export default function DocumentsPage() {
           )}
         </>
       )}
-
-      <AlertDialog open={!!summary} onOpenChange={(open) => !open && setSummary(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle className="gradient-text text-2xl">{summary?.title}</AlertDialogTitle>
-                <AlertDialogDescription>Voici le résumé du document :</AlertDialogDescription>
-            </AlertDialogHeader>
-            {isSummarizing && !summary?.content ? (
-                <div className="flex items-center justify-center h-24">
-                    <Loader className="w-8 h-8 animate-spin text-purple-500" />
-                </div>
-            ) : (
-                <div className="max-h-60 overflow-y-auto text-sm pr-4">
-                    {summary?.content}
-                </div>
-            )}
-            <AlertDialogFooter>
-                <Button onClick={() => setSummary(null)}>Fermer</Button>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

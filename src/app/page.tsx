@@ -44,7 +44,7 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const features = [
   {
     icon: BrainCircuit,
-    title: "Quiz Interactifs et IA",
+    title: "Quiz Interactifs & Corrigés",
     description: "Entraînez-vous avec des milliers de questions et recevez des explications détaillées pour chaque réponse.",
     gradient: "from-blue-500 to-cyan-500"
   },
@@ -195,7 +195,7 @@ function HomePageContent() {
                 <div className="flex flex-col items-center">
                   <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center font-black text-3xl mb-4">3</div>
                   <h3 className="text-xl font-bold mb-2">Progressez</h3>
-                  <p className="text-muted-foreground">Suivez vos résultats, identifiez vos faiblesses et maximisez vos chances de succès grâce à l'IA.</p>
+                  <p className="text-muted-foreground">Suivez vos résultats, identifiez vos faiblesses et maximisez vos chances de succès.</p>
                 </div>
               </div>
             </div>
@@ -262,7 +262,7 @@ function HomePageContent() {
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm">
                     <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Approfondissez vos connaissances spécifiques à votre domaine.</span></p>
-                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Optimisez votre temps de révision avec nos résumés par IA.</span></p>
+                    <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Optimisez votre temps de révision avec des ressources ciblées.</span></p>
                     <p className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0"/><span>Restez à jour sur les dernières réformes et textes de loi.</span></p>
                   </CardContent>
                 </Card>
@@ -306,8 +306,7 @@ function HomePageContent() {
                           </CardHeader>
                           <CardContent className="space-y-3">
                               <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Accès à TOUS les quiz et documents</p>
-                              <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Résumé de documents PDF par IA</p>
-                              <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Corrections détaillées par l'IA</p>
+                              <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Corrections pédagogiques détaillées</p>
                               <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Analyse de performance</p>
                               <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Support prioritaire</p>
                           </CardContent>
@@ -332,7 +331,7 @@ function HomePageContent() {
                 <AccordionItem value="item-1">
                   <AccordionTrigger>Comment le contenu des quiz et des cours est-il créé ?</AccordionTrigger>
                   <AccordionContent>
-                    Notre contenu est une collaboration entre des experts des concours de la fonction publique et notre intelligence artificielle de pointe. Les experts définissent les thèmes et valident la pertinence, tandis que l'IA nous aide à générer une grande variété de questions et d'explications pédagogiques.
+                    Notre contenu est soigneusement élaboré par une équipe d'experts et de professionnels des concours de la fonction publique burkinabè. Chaque question est conçue pour refléter fidèlement le format et la difficulté des examens réels.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2">
@@ -344,7 +343,7 @@ function HomePageContent() {
                 <AccordionItem value="item-3">
                   <AccordionTrigger>Puis-je utiliser la plateforme sur mon téléphone ?</AccordionTrigger>
                   <AccordionContent>
-                    Oui ! La plateforme "Gagne ton concours" a été conçue pour être entièrement "responsive". Que vous soyez sur un ordinateur, une tablette ou un smartphone, l'expérience est optimisée pour votre écran.
+                    Oui ! La plateforme "Gagne ton concours" a été conçue pour être entièrement "responsive". Que vous soyez sur un ordinateur, une tablette ou un smartphone, l'expérience est optimisée pour votre écran. Vous pouvez même l'installer sur votre téléphone pour un accès plus rapide.
                   </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="item-4">

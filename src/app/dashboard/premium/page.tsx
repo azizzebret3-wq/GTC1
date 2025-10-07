@@ -4,7 +4,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Crown, Sparkles, CheckCircle, BrainCircuit, BookOpen, Video, ArrowRight, Copy, Star, Wallet, MessageCircle, Check } from 'lucide-react';
+import { Crown, Sparkles, CheckCircle, BookOpen, Video, ArrowRight, Copy, Star, Wallet, MessageCircle, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth.tsx';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -14,7 +14,6 @@ import { fr } from 'date-fns/locale';
 const premiumFeatures = [
     { icon: BookOpen, text: "Accès illimité à toute la bibliothèque" },
     { icon: Video, text: 'Accès illimité à toutes les formations vidéo' },
-    { icon: BrainCircuit, text: 'Résumé de documents PDF par IA' },
     { icon: Sparkles, text: 'Corrections intelligentes et détaillées' },
     { icon: CheckCircle, text: 'Suivi de performance avancé' },
     { icon: CheckCircle, text: 'Support prioritaire' },
