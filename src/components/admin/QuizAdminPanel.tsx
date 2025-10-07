@@ -116,7 +116,7 @@ const MathToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
           onClick={() => onInsert(latexSnippets[key])}
           aria-label={`Insérer ${key}`}
         >
-          <MathText text={latexSnippets[key].replace(/\{\}/g, '{•}').replace(/\\vec/g, '\\vec{F}')} />
+          <MathText text={'$'+latexSnippets[key].replace(/\{\}/g, '{•}').replace(/\\vec/g, '\\vec{F}')+'$'} />
         </Button>
       ))}
     </div>
