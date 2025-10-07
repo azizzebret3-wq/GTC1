@@ -12,13 +12,11 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
         return null;
     }
     
-    // The text is passed directly to MathpixMarkdown.
-    // It will handle finding and rendering LaTeX formulas automatically.
-    // We add a key to force re-render when text changes, which can help with some update issues.
     return (
         <MathpixLoader>
             <MathpixMarkdown
                 text={text}
+                htmlTags={true} // Allow HTML tags in the input, which also enables more lenient math parsing
                 key={text}
             />
         </MathpixLoader>
