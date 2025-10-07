@@ -48,7 +48,7 @@ export default function QuizzesPage() {
 
   const isPremium = userData?.subscription_type === 'premium';
   const isAdmin = userData?.role === 'admin';
-  const canGenerate = isPremium || isAdmin;
+  const canAccessPremium = isPremium || isAdmin;
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -73,28 +73,32 @@ export default function QuizzesPage() {
   
 
   const handleQuickPractice = () => {
-    const freeQuestions = quizzes
-      .filter(q => q.access_type === 'gratuit' || canGenerate)
+    if (!canAccessPremium) {
+      router.push('/dashboard/premium');
+      return;
+    }
+
+    const availableQuestions = quizzes
       .flatMap(q => q.questions);
 
-    if (freeQuestions.length < 5) {
+    if (availableQuestions.length < 15) {
       toast({
         title: 'Pas assez de questions',
-        description: 'Il n\'y a pas assez de questions disponibles pour créer un entraînement rapide.',
+        description: 'Il n\'y a pas assez de questions dans la banque pour créer un entraînement.',
         variant: 'destructive',
       });
       return;
     }
 
-    const shuffled = freeQuestions.sort(() => 0.5 - Math.random());
+    const shuffled = availableQuestions.sort(() => 0.5 - Math.random());
     const selectedQuestions = shuffled.slice(0, 15);
 
     const quickQuiz: Quiz = {
       title: "Entraînement Rapide",
-      description: "Une session de questions aléatoires pour tester vos connaissances.",
+      description: "Une session de questions sur mesure pour tester vos connaissances.",
       category: "Mixte",
       difficulty: "moyen",
-      access_type: "gratuit",
+      access_type: "premium",
       duration_minutes: 15,
       total_questions: selectedQuestions.length,
       questions: selectedQuestions,
@@ -147,25 +151,31 @@ export default function QuizzesPage() {
       {/* Generators */}
        <Card className="w-full glassmorphism shadow-xl">
            <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-green-500 rounded-lg flex items-center justify-center shadow-md">
-                  <Shuffle className="w-5 h-5 text-white" />
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-green-500 rounded-lg flex items-center justify-center shadow-md">
+                    <Shuffle className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                    <CardTitle className="gradient-text font-black">Entraînement Rapide</CardTitle>
+                    <CardDescription className="font-semibold">Questions sur mesure, révision express.</CardDescription>
+                </div>
               </div>
-              <div>
-                  <CardTitle className="gradient-text font-black">Entraînement Rapide</CardTitle>
-                  <CardDescription className="font-semibold">Questions aléatoires, révision express.</CardDescription>
-              </div>
+              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs">
+                <Crown className="w-3 h-3 mr-1" />
+                Premium
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
-            <p className="text-muted-foreground md:max-w-xl">Lancez une session de 15 questions tirées au hasard de notre banque de quiz pour un test rapide de vos connaissances générales.</p>
+            <p className="text-muted-foreground md:max-w-xl">Lancez une session de 15 questions sur mesure pour un test approfondi de vos connaissances.</p>
              <Button
                 onClick={handleQuickPractice}
                 disabled={isLoadingQuizzes}
-                className="w-full md:w-auto h-11 text-base font-bold bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700 text-white shadow-lg"
+                className={`w-full md:w-auto h-11 text-base font-bold text-white shadow-lg ${!canAccessPremium ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700'}`}
               >
-                <Rocket className="w-5 h-5 mr-3"/>
-                Démarrer une session
+                {!canAccessPremium ? <Lock className="w-5 h-5 mr-3"/> : <Rocket className="w-5 h-5 mr-3"/>}
+                {canAccessPremium ? 'Démarrer une session' : 'Nécessite Premium'}
             </Button>
           </CardContent>
         </Card>
@@ -221,7 +231,7 @@ export default function QuizzesPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredQuizzes.map((quiz) => {
-              const isLocked = quiz.access_type === 'premium' && !isPremium && !isAdmin;
+              const isLocked = quiz.access_type === 'premium' && !canAccessPremium;
               return (
                 <Card key={quiz.id} className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 flex flex-col">
                   <CardContent className="p-5 flex-grow">

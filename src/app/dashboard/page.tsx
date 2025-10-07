@@ -99,6 +99,46 @@ export default function Dashboard() {
       });
   }, [quizzes, recentAttempts, loadingData]);
 
+  const isPremium = userData?.subscription_type === 'premium';
+  const isAdmin = userData?.role === 'admin';
+  const canAccessPremium = isPremium || isAdmin;
+
+  const handleQuickPractice = () => {
+    if (!canAccessPremium) {
+      router.push('/dashboard/premium');
+      return;
+    }
+
+    const availableQuestions = quizzes.flatMap(q => q.questions);
+
+    if (availableQuestions.length < 15) {
+      toast({
+        title: 'Pas assez de questions',
+        description: 'Il n\'y a pas assez de questions dans la banque pour créer un entraînement.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const shuffled = availableQuestions.sort(() => 0.5 - Math.random());
+    const selectedQuestions = shuffled.slice(0, 15);
+
+    const quickQuiz: Quiz = {
+      title: "Entraînement Rapide",
+      description: "Une session de questions sur mesure pour tester vos connaissances.",
+      category: "Mixte",
+      difficulty: "moyen",
+      access_type: "premium",
+      duration_minutes: 15,
+      total_questions: selectedQuestions.length,
+      questions: selectedQuestions,
+      createdAt: new Date(),
+    };
+    
+    sessionStorage.setItem('generatedQuiz', JSON.stringify(quickQuiz));
+    router.push('/dashboard/take-quiz?source=quick-practice');
+  };
+
   if (loading || loadingData) {
     return (
       <div className="p-4 sm:p-6 space-y-6">
@@ -118,8 +158,6 @@ export default function Dashboard() {
     );
   }
 
-  const isPremium = userData?.subscription_type === 'premium';
-  const isAdmin = userData?.role === 'admin';
   const firstName = userData?.fullName?.split(' ')[0] || 'Champion';
   const recommendedQuizzes = quizzes.filter(q => !q.isMockExam);
 
@@ -230,24 +268,31 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-6">
           <Card className="glassmorphism shadow-xl card-hover border-0">
             <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <Shuffle className="w-5 h-5 text-white" />
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <Shuffle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-foreground">Entraînement Rapide</CardTitle>
+                    <p className="text-muted-foreground font-medium text-sm">Testez-vous sur des questions sur mesure.</p>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-foreground">Entraînement Rapide</CardTitle>
-                  <p className="text-muted-foreground font-medium text-sm">Testez-vous sur des questions aléatoires.</p>
-                </div>
+                 <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Premium
+                </Badge>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">Lancez une session de questions tirées au hasard de notre banque de quiz pour une révision express.</p>
-               <Link href="/dashboard/quizzes" passHref>
-                  <Button className="font-semibold rounded-lg bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg">
-                    <Rocket className="w-4 h-4 mr-2" />
-                    Commencer une session
-                  </Button>
-                </Link>
+              <p className="text-sm text-muted-foreground mb-4">Lancez une session de questions sur mesure pour un test approfondi de vos connaissances.</p>
+               <Button 
+                onClick={handleQuickPractice}
+                className={`font-semibold rounded-lg text-white shadow-lg ${!canAccessPremium ? 'bg-gray-400 cursor-pointer' : 'bg-gradient-to-r from-teal-500 to-green-500'}`}
+               >
+                  {!canAccessPremium ? <Lock className="w-4 h-4 mr-2"/> : <Rocket className="w-4 h-4 mr-2" />}
+                  {canAccessPremium ? 'Commencer une session' : 'Nécessite Premium'}
+                </Button>
             </CardContent>
           </Card>
           <Card className="glassmorphism shadow-xl card-hover border-0">
@@ -277,7 +322,7 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-3">
                   {recommendedQuizzes.slice(0,4).map((quiz, index) => {
-                    const isLocked = quiz.access_type === 'premium' && !isPremium && !isAdmin;
+                    const isLocked = quiz.access_type === 'premium' && !canAccessPremium;
                     return (
                         <div key={quiz.id} className="group bg-background/60 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:bg-accent/50 transition-all">
                           <div className="flex items-center justify-between">
@@ -408,7 +453,7 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-3">
                   {latestContent.map((content) => {
-                     const isLocked = content.access_type === 'premium' && !isPremium && !isAdmin;
+                     const isLocked = content.access_type === 'premium' && !canAccessPremium;
                      return (
                         <div key={content.id} className="group block" onClick={() => {
                             if (isLocked) {

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, XCircle, Clock, Info, Award, Activity, Loader, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Info, Award, Activity, Loader, ArrowLeft, ArrowRight, Heart } from 'lucide-react';
 import { getQuizzesFromFirestore, Quiz, saveAttemptToFirestore } from '@/lib/firestore.service';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth.tsx';
@@ -24,6 +24,41 @@ type QuestionResult = {
   isCorrect: boolean;
   explanation?: string;
 };
+
+const EncouragementCard = ({ score, total }: { score: number; total: number }) => {
+  const percentage = total > 0 ? (score / total) * 100 : 0;
+  let title = '';
+  let message = '';
+  let color = '';
+
+  if (percentage >= 80) {
+    title = 'Excellent travail !';
+    message = 'Vous maîtrisez le sujet. Continuez sur cette lancée impressionnante !';
+    color = 'from-green-500 to-emerald-500';
+  } else if (percentage >= 50) {
+    title = 'Bon effort !';
+    message = 'Vous êtes sur la bonne voie. La persévérance est la clé du succès. Analysez vos erreurs et continuez à vous entraîner.';
+    color = 'from-blue-500 to-cyan-500';
+  } else {
+    title = 'Ne baissez pas les bras !';
+    message = 'Chaque erreur est une opportunité d\'apprendre. Ce quiz est un pas de plus vers votre réussite. Continuez à travailler dur !';
+    color = 'from-orange-500 to-red-500';
+  }
+
+  return (
+    <Card className={`bg-gradient-to-r ${color} text-white shadow-xl`}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Heart className="w-6 h-6" /> {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>{message}</p>
+      </CardContent>
+    </Card>
+  );
+};
+
 
 function TakeQuizComponent() {
   const router = useRouter();
@@ -232,6 +267,8 @@ function TakeQuizComponent() {
             </Button>
           </CardContent>
         </Card>
+
+        <EncouragementCard score={score} total={quiz.questions.length} />
         
         <div className="space-y-4">
           <h2 className="text-2xl font-bold flex items-center gap-2"><Activity/>Correction détaillée</h2>
