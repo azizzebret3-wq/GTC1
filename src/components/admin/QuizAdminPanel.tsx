@@ -330,7 +330,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                     />
                     <div className="p-4 bg-background rounded-md border min-h-[140px]">
                         <Label className="text-sm text-muted-foreground">Aperçu</Label>
-                        <div className="text-lg"><MathText text={watch(`questions.${qIndex}.question`) || ''} isBlock /></div>
+                        <div className="text-lg"><MathText text={watch(`questions.${qIndex}.question`) || ''} /></div>
                     </div>
                 </div>
                 {questionErrors?.question && <p className="text-red-500 text-xs mt-1">{questionErrors.question.message}</p>}
@@ -347,7 +347,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                     />
                     <div className="p-4 bg-background rounded-md border min-h-[140px]">
                         <Label className="text-sm text-muted-foreground">Aperçu</Label>
-                        <div className="text-base"><MathText text={watch(`questions.${qIndex}.explanation`) || ''} isBlock /></div>
+                        <div className="text-base"><MathText text={watch(`questions.${qIndex}.explanation`) || ''} /></div>
                     </div>
                 </div>
             </div>

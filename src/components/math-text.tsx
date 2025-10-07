@@ -6,33 +6,44 @@ import { InlineMath, BlockMath } from 'react-katex';
 
 interface MathTextProps {
   text: string;
-  isBlock?: boolean;
 }
 
-const MathText: React.FC<MathTextProps> = ({ text, isBlock = false }) => {
+const MathText: React.FC<MathTextProps> = ({ text }) => {
   if (!text) {
     return null;
   }
 
-  // Simple check for LaTeX syntax.
-  // This can be improved, but for now we look for common LaTeX characters.
-  const hasLatex = /[\\{}^_]/.test(text) || /\$\$.*\$\$/.test(text) || /\\\(.*\\\)/.test(text);
+  // Regex to split the text into segments of regular text, inline math, and block math.
+  // It handles $, $$, \( \), and \[ \] delimiters.
+  const regex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[\s\S]*?\$|\\\([\s\S]*?\\\)|[^$
+]+)/g;
+  const parts = text.match(regex) || [];
 
-  if (hasLatex) {
-    try {
-      // If it looks like LaTeX, try to render it.
-      if (isBlock) {
-        return <BlockMath math={text} />;
-      }
-      return <InlineMath math={text} />;
-    } catch (error) {
-      // If KaTeX fails to parse, just render as plain text.
-      return <span>{text}</span>;
-    }
-  }
-
-  // If no LaTeX detected, render as plain text.
-  return <span>{text}</span>;
+  return (
+    <>
+      {parts.map((part, index) => {
+        try {
+          if (part.startsWith('$$') && part.endsWith('$$')) {
+            return <BlockMath key={index} math={part.slice(2, -2)} />;
+          }
+          if (part.startsWith('\\[') && part.endsWith('\\]')) {
+            return <BlockMath key={index} math={part.slice(2, -2)} />;
+          }
+          if (part.startsWith('$') && part.endsWith('$')) {
+            return <InlineMath key={index} math={part.slice(1, -1)} />;
+          }
+          if (part.startsWith('\\(') && part.endsWith('\\)')) {
+            return <InlineMath key={index} math={part.slice(2, -2)} />;
+          }
+          // It's a regular text part, we can render it as a span or fragment
+          return <span key={index}>{part}</span>;
+        } catch (error) {
+           // If KaTeX fails to parse, render the part as plain text with an error indicator
+           return <span key={index} style={{ color: 'red', fontStyle: 'italic' }}>{part}</span>;
+        }
+      })}
+    </>
+  );
 };
 
 export default MathText;
