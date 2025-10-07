@@ -23,6 +23,7 @@ import {
   FileText,
   Video,
   Shuffle,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,11 +33,13 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { getQuizzesFromFirestore, Quiz, getAttemptsFromFirestore, Attempt, getDocumentsFromFirestore, LibraryDocument } from "@/lib/firestore.service";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 
 
 export default function Dashboard() {
   const { user, userData, loading } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [recentAttempts, setRecentAttempts] = useState<Attempt[]>([]);
@@ -273,50 +276,62 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {recommendedQuizzes.slice(0,4).map((quiz, index) => (
-                    <div key={quiz.id} className="group bg-background/60 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:bg-accent/50 transition-all">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md ${
-                              index % 4 === 0 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
-                              index % 4 === 1 ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
-                              index % 4 === 2 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
-                              'bg-gradient-to-r from-orange-500 to-red-500'
-                            }`}>
-                              <Play className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-foreground group-hover:text-purple-600 transition-colors text-sm">
-                                {quiz.title}
-                              </h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-xs">{quiz.category}</Badge>
-                                <Badge variant="outline" className={`text-xs capitalize ${
-                                  quiz.difficulty === 'facile' ? 'border-green-400/50 text-green-600 dark:text-green-400' :
-                                  quiz.difficulty === 'moyen' ? 'border-yellow-400/50 text-yellow-600 dark:text-yellow-400' :
-                                  'border-red-400/50 text-red-600 dark:text-red-400'
+                  {recommendedQuizzes.slice(0,4).map((quiz, index) => {
+                    const isLocked = quiz.access_type === 'premium' && !isPremium && !isAdmin;
+                    return (
+                        <div key={quiz.id} className="group bg-background/60 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:bg-accent/50 transition-all">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md ${
+                                  index % 4 === 0 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                                  index % 4 === 1 ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
+                                  index % 4 === 2 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                                  'bg-gradient-to-r from-orange-500 to-red-500'
                                 }`}>
-                                  {quiz.difficulty}
-                                </Badge>
-                              </div>
+                                  <Play className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-foreground group-hover:text-purple-600 transition-colors text-sm">
+                                    {quiz.title}
+                                  </h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">{quiz.category}</Badge>
+                                    <Badge variant="outline" className={`text-xs capitalize ${
+                                      quiz.difficulty === 'facile' ? 'border-green-400/50 text-green-600 dark:text-green-400' :
+                                      quiz.difficulty === 'moyen' ? 'border-yellow-400/50 text-yellow-600 dark:text-yellow-400' :
+                                      'border-red-400/50 text-red-600 dark:text-red-400'
+                                    }`}>
+                                      {quiz.difficulty}
+                                    </Badge>
+                                    {quiz.access_type === 'premium' && (
+                                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs">
+                                            <Crown className="w-3 h-3 mr-1" /> Premium
+                                        </Badge>
+                                    )}
+                                  </div>
+                                </div>
                             </div>
+                            <Button 
+                                size="icon"
+                                className={`rounded-full shadow-md w-10 h-10 ${
+                                  isLocked 
+                                    ? 'bg-gray-400 cursor-pointer'
+                                    : 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                                }`}
+                                onClick={() => {
+                                  if (isLocked) {
+                                    router.push('/dashboard/premium');
+                                  } else {
+                                    router.push(`/dashboard/take-quiz?id=${quiz.id}`);
+                                  }
+                                }}
+                              >
+                                {isLocked ? <Lock className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
+                              </Button>
+                          </div>
                         </div>
-                        <Link href={`/dashboard/take-quiz?id=${quiz.id}`} passHref>
-                          <Button 
-                            size="icon"
-                            className={`rounded-full shadow-md w-10 h-10 ${
-                              quiz.access_type === 'premium' && !isPremium 
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-indigo-500 to-purple-600'
-                            }`}
-                            disabled={quiz.access_type === 'premium' && !isPremium && !isAdmin}
-                          >
-                             {quiz.access_type === 'premium' && !isPremium && !isAdmin ? <Crown className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                  })}
                 </div>
               )}
               
@@ -392,29 +407,38 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {latestContent.map((content) => (
-                     <Link key={content.id} href={content.url} target="_blank" rel="noopener noreferrer" className="group block">
-                        <div className="p-3 border border-border/50 rounded-lg hover:bg-accent/50 cursor-pointer">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 ${
-                            content.type === 'pdf' ? 'bg-gradient-to-r from-red-500 to-pink-500' : 
-                            'bg-gradient-to-r from-blue-500 to-cyan-500'
-                            }`}>
-                            {content.type === 'pdf' ? <FileText className="w-4 h-4 text-white" /> : <Video className="w-4 h-4 text-white" />}
+                  {latestContent.map((content) => {
+                     const isLocked = content.access_type === 'premium' && !isPremium && !isAdmin;
+                     return (
+                        <div key={content.id} className="group block" onClick={() => {
+                            if (isLocked) {
+                                router.push('/dashboard/premium');
+                            } else {
+                                window.open(content.url, '_blank');
+                            }
+                        }}>
+                            <div className="p-3 border border-border/50 rounded-lg hover:bg-accent/50 cursor-pointer">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 ${
+                                    content.type === 'pdf' ? 'bg-gradient-to-r from-red-500 to-pink-500' : 
+                                    'bg-gradient-to-r from-blue-500 to-cyan-500'
+                                    }`}>
+                                    {content.type === 'pdf' ? <FileText className="w-4 h-4 text-white" /> : <Video className="w-4 h-4 text-white" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-sm text-foreground truncate group-hover:text-purple-600">
+                                            {content.title}
+                                        </p>
+                                        <Badge variant="outline" className="text-xs capitalize mt-1">
+                                            {content.type}
+                                        </Badge>
+                                    </div>
+                                    {content.access_type === 'premium' && <Crown className="w-4 h-4 text-yellow-500" />}
+                                </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-foreground truncate group-hover:text-purple-600">
-                                {content.title}
-                            </p>
-                            <Badge variant="outline" className="text-xs capitalize mt-1">
-                                {content.type}
-                                </Badge>
-                            </div>
-                             {content.access_type === 'premium' && <Crown className="w-4 h-4 text-yellow-500" />}
                         </div>
-                        </div>
-                    </Link>
-                  ))}
+                     )
+                    })}
                 </div>
               )}
             </CardContent>
@@ -424,7 +448,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-    
-
-    
