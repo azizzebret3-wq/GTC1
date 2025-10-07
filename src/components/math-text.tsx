@@ -1,45 +1,51 @@
 'use client';
-import React from 'react';
-
-// This component is a wrapper to render text that may contain LaTeX.
-// It splits the text into segments of regular text and math formulas
-// and renders them accordingly.
+import React, { useMemo } from 'react';
+import katex from 'katex';
 
 interface MathTextProps {
   text: string;
 }
 
 const MathText: React.FC<MathTextProps> = ({ text }) => {
-  if (!text) {
-    return null;
-  }
+  const renderedParts = useMemo(() => {
+    if (!text) {
+      return null;
+    }
 
-  // Regex to find math expressions delimited by $...$ or $$...$$
-  const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
-  const parts = text.split(regex);
+    // Regex to find math expressions delimited by $...$ (inline) or $$...$$ (block).
+    const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
+    const parts = text.split(regex);
 
-  return (
-    <React.Fragment>
-      {parts.map((part, index) => {
-        if (part.match(regex)) {
-          // It's a math part
-          const isBlock = part.startsWith('$$');
-          const math = part.substring(isBlock ? 2 : 1, part.length - (isBlock ? 2 : 1));
-          const Tag = isBlock ? 'div' : 'span';
-          // A simple way to display math-like content.
-          // This does not use KaTeX but will render the content.
-          // For a full LaTeX rendering, a library would be needed, but this avoids build issues.
+    return parts.map((part, index) => {
+      if (part.match(regex)) {
+        const isBlock = part.startsWith('$$');
+        const math = part.substring(isBlock ? 2 : 1, part.length - (isBlock ? 2 : 1));
+        
+        try {
+          const html = katex.renderToString(math, {
+            throwOnError: false,
+            displayMode: isBlock,
+          });
+
+          // Using dangerouslySetInnerHTML to render the KaTeX output
           return (
-            <Tag key={index} style={{ fontStyle: 'italic' }}>
-              {math}
-            </Tag>
+            <span key={index} dangerouslySetInnerHTML={{ __html: html }} />
           );
+
+        } catch (error) {
+          console.error('KaTeX rendering error:', error);
+          // In case of error, just display the raw math text.
+          return <code key={index} className="text-red-500">{part}</code>;
         }
+
+      } else {
         // It's a regular text part
         return <span key={index}>{part}</span>;
-      })}
-    </React.Fragment>
-  );
+      }
+    });
+  }, [text]);
+
+  return <React.Fragment>{renderedParts}</React.Fragment>;
 };
 
 export default MathText;
