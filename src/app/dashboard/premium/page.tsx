@@ -14,14 +14,13 @@ import { fr } from 'date-fns/locale';
 const premiumFeatures = [
     { icon: BookOpen, text: "Accès illimité à toute la bibliothèque" },
     { icon: Video, text: 'Accès illimité à toutes les formations vidéo' },
-    { icon: Sparkles, text: 'Corrections intelligentes et détaillées' },
     { icon: CheckCircle, text: 'Suivi de performance avancé' },
     { icon: CheckCircle, text: 'Support prioritaire' },
 ];
 
 const mobileMoneyOptions = [
     { name: "Orange Money", instruction: (amount: number) => `*144*2*1*54808048*${amount}#`},
-    { name: "Moov Money", instruction: (amount: number) => `*555*2*1*54808048*${amount}#`},
+    { name: "Moov Money", instruction: (amount: number) => `*555*2*1*53017160*${amount}#`},
     { name: "Wave", instruction: (amount: number) => `22654808048`},
 ];
 
