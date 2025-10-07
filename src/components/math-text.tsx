@@ -14,11 +14,7 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
     
     return (
         <MathpixLoader>
-            <MathpixMarkdown
-                text={text}
-                htmlTags={true} // Allow HTML tags in the input, which also enables more lenient math parsing
-                key={text}
-            />
+            <MathpixMarkdown text={text} key={text} />
         </MathpixLoader>
     );
 };

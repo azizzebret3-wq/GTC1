@@ -57,6 +57,12 @@ Le quiz doit être entièrement en français et optimisé pour un apprentissage 
 Sujet du Quiz : {{{topic}}}
 Difficulté demandée : {{{difficulty}}}
 
+**RÈGLE CRUCIALE POUR LES MATHÉMATIQUES :**
+Pour toute expression mathématique, formule, variable, ou même un simple symbole mathématique (comme U_n, x^2, etc.), vous devez **impérativement** l'entourer de délimiteurs dollar.
+- Utilisez un seul dollar ($) pour les formules en ligne. Exemple : Le calcul de $U_n = a + (n-1)d$ est simple.
+- Utilisez deux dollars ($$) pour les formules en bloc (sur leur propre ligne). Exemple : $$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$
+Cette règle s'applique aux questions, aux options et aux explications.
+
 Veuillez générer un quiz complet en respectant scrupuleusement la structure et les exigences de qualité suivantes :
 
 1.  **Métadonnées du Quiz :**
