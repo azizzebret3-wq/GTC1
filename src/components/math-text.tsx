@@ -13,37 +13,40 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
       return null;
     }
 
-    // Split the input text by newlines to process each line separately.
-    const lines = text.split('\n');
+    // This regex looks for $$...$$ (block) or $...$ (inline) delimiters.
+    // It will split the text into an array of strings, separating the math parts.
+    const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
+    const parts = text.split(regex);
 
-    return lines.map((line, lineIndex) => {
-      // For each line, find math expressions.
-      const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
-      const parts = line.split(regex);
-
-      const renderedParts = parts.map((part, partIndex) => {
-        if (part.match(regex)) {
-          const isBlock = part.startsWith('$$');
-          const math = part.substring(isBlock ? 2 : 1, part.length - (isBlock ? 2 : 1));
-          
-          try {
-            const html = katex.renderToString(math, {
-              throwOnError: false,
-              displayMode: isBlock,
-            });
-            return <span key={partIndex} dangerouslySetInnerHTML={{ __html: html }} />;
-          } catch (error) {
-            console.error('KaTeX rendering error:', error);
-            return <code key={partIndex} className="text-red-500">{part}</code>;
-          }
-        } else {
-          // It's a regular text part.
-          return <span key={partIndex}>{part}</span>;
+    return parts.map((part, index) => {
+      if (part.match(regex)) {
+        const isBlock = part.startsWith('$$');
+        const math = part.substring(isBlock ? 2 : 1, part.length - (isBlock ? 2 : 1));
+        
+        try {
+          const html = katex.renderToString(math, {
+            throwOnError: false,
+            displayMode: isBlock,
+          });
+          // dangerouslySetInnerHTML is safe here because we are using KaTeX to generate the HTML,
+          // which sanitizes the input.
+          return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
+        } catch (error) {
+          console.error('KaTeX rendering error:', error);
+          // If there's an error, display the raw math code in a noticeable way.
+          return <code key={index} className="text-red-500 font-mono">{part}</code>;
         }
-      });
-      
-      // Render each line in its own div to preserve line breaks.
-      return <div key={lineIndex}>{renderedParts}</div>;
+      } else {
+        // This is a regular text part. We need to render newlines as <br> tags.
+        // We can split by newline and join with <br />.
+        const lines = part.split('\n').map((line, lineIndex, arr) => (
+          <React.Fragment key={lineIndex}>
+            {line}
+            {lineIndex < arr.length - 1 && <br />}
+          </React.Fragment>
+        ));
+        return <span key={index}>{lines}</span>;
+      }
     });
   }, [text]);
 
