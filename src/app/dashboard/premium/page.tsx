@@ -25,9 +25,7 @@ const mobileMoneyOptions = [
 ];
 
 const adminContacts = [
-    { name: "Admin 1", number: "22675204647" },
-    { name: "Admin 2", number: "22654808048" },
-    { name: "Admin 3", number: "22654776805" }
+    { name: "Support Admin", number: "22654808048" },
 ];
 
 const whatsAppMessage = "Bonjour, je viens d'effectuer le paiement pour l'abonnement Premium. Voici ma preuve de paiement.";
@@ -160,10 +158,10 @@ export default function PremiumPage() {
 
             <div className="p-6 rounded-lg border bg-background/50">
                 <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><MessageCircle className="w-5 h-5 text-green-500"/>Étape 2 : Envoyez la preuve</h3>
-                <p className="text-muted-foreground mb-4">Après le paiement, faites une capture d'écran de la confirmation et envoyez-la à l'un de nos administrateurs via WhatsApp.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <p className="text-muted-foreground mb-4">Après le paiement, faites une capture d'écran de la confirmation et envoyez-la à notre administrateur via WhatsApp.</p>
+                <div className="flex justify-center">
                     {adminContacts.map(admin => (
-                        <Button key={admin.number} asChild className="w-full h-11 bg-green-500 hover:bg-green-600 text-white">
+                        <Button key={admin.number} asChild className="w-full sm:w-auto h-11 bg-green-500 hover:bg-green-600 text-white px-8">
                             <Link href={`https://wa.me/${admin.number}?text=${encodedMessage}`} target="_blank">
                                 {admin.name} <ArrowRight className="w-4 h-4 ml-2"/>
                             </Link>
