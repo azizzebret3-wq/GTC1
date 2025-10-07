@@ -10,12 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const premiumFeatures = [
-    { icon: BrainCircuit, text: "Génération de quiz intelligente et illimitée" },
-    { icon: BookOpen, text: 'Accès à toute la bibliothèque de documents' },
-    { icon: Video, text: 'Accès à toutes les formations vidéo' },
+    { icon: BookOpen, text: "Accès illimité à toute la bibliothèque" },
+    { icon: Video, text: 'Accès illimité à toutes les formations vidéo' },
+    { icon: BrainCircuit, text: 'Résumé de documents PDF par IA' },
     { icon: Sparkles, text: 'Corrections intelligentes et détaillées' },
     { icon: CheckCircle, text: 'Suivi de performance avancé' },
     { icon: CheckCircle, text: 'Support prioritaire' },
@@ -61,7 +60,7 @@ export default function PremiumPage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black gradient-text">
-                  Passez à Premium
+                  GTC Premium
                 </h1>
                 <p className="text-sm sm:text-base text-gray-600 font-medium">
                   Débloquez votre plein potentiel et maximisez vos chances de succès.
@@ -71,15 +70,24 @@ export default function PremiumPage() {
           </div>
         </div>
         
-         {isPremium && (
+         {isPremium ? (
             <Card className="glassmorphism shadow-xl border-2 border-green-400/50">
                 <CardHeader>
-                    <CardTitle className="text-xl text-green-600">Vous êtes déjà membre Premium !</CardTitle>
+                    <CardTitle className="text-xl text-green-600">Félicitations, vous êtes membre Premium !</CardTitle>
                     {expiryDate && 
                         <CardDescription>Votre abonnement est actif jusqu'au <span className="font-bold">{expiryDate}</span>.</CardDescription>
                     }
                 </CardHeader>
             </Card>
+        ) : (
+          <Card className="glassmorphism shadow-lg border-primary/20">
+            <CardContent className="p-6">
+              <div className="text-center">
+                 <h2 className="text-xl font-bold">Bienvenue dans l'espace d'activation Premium !</h2>
+                 <p className="text-muted-foreground mt-1">Suivez les étapes ci-dessous pour devenir membre.</p>
+              </div>
+            </CardContent>
+          </Card>
         )}
         
         {/* Pricing Cards */}

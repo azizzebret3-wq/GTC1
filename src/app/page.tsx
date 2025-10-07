@@ -45,7 +45,7 @@ const features = [
   {
     icon: BrainCircuit,
     title: "Quiz Interactifs et IA",
-    description: "Entraînez-vous avec des milliers de questions et recevez des explications détaillées générées par l'IA.",
+    description: "Entraînez-vous avec des milliers de questions et recevez des explications détaillées pour chaque réponse.",
     gradient: "from-blue-500 to-cyan-500"
   },
   {
@@ -144,7 +144,7 @@ function HomePageContent() {
                 </div>
                 <Badge className="border-border/50 px-6 py-2 text-sm font-semibold shadow-lg">
                   <Sparkles className="w-4 h-4 mr-2 text-primary" />
-                  Plateforme éducative #1 au Burkina Faso
+                  La plateforme de référence pour les concours au Burkina Faso
                 </Badge>
               </div>
               
@@ -305,8 +305,8 @@ function HomePageContent() {
                               <p className="text-4xl font-black pt-4">1000 FCFA<span className="text-lg text-muted-foreground">/mois</span></p>
                           </CardHeader>
                           <CardContent className="space-y-3">
-                              <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Génération de quiz illimitée avec l'IA</p>
                               <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Accès à TOUS les quiz et documents</p>
+                              <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Résumé de documents PDF par IA</p>
                               <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Corrections détaillées par l'IA</p>
                               <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Analyse de performance</p>
                               <p className="flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-2"/>Support prioritaire</p>
