@@ -15,8 +15,7 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
 
   // Regex to split the text into segments of regular text, inline math, and block math.
   // It handles $, $$, \( \), and \[ \] delimiters.
-  const regex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[\s\S]*?\$|\\\([\s\S]*?\\\)|[^$
-]+)/g;
+  const regex = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[\s\S]*?\$|\\\([\s\S]*?\\\)|[^$\\]+)/g;
   const parts = text.match(regex) || [];
 
   return (
@@ -24,16 +23,19 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
       {parts.map((part, index) => {
         try {
           if (part.startsWith('$$') && part.endsWith('$$')) {
-            return <BlockMath key={index} math={part.slice(2, -2)} />;
+            return <BlockMath key={index}>{part.slice(2, -2)}</BlockMath>;
           }
           if (part.startsWith('\\[') && part.endsWith('\\]')) {
-            return <BlockMath key={index} math={part.slice(2, -2)} />;
+            return <BlockMath key={index}>{part.slice(2, -2)}</BlockMath>;
           }
           if (part.startsWith('$') && part.endsWith('$')) {
-            return <InlineMath key={index} math={part.slice(1, -1)} />;
+            // This is a special case to avoid rendering single "$" as math
+            if(part.trim().length > 2) {
+              return <InlineMath key={index}>{part.slice(1, -1)}</InlineMath>;
+            }
           }
           if (part.startsWith('\\(') && part.endsWith('\\)')) {
-            return <InlineMath key={index} math={part.slice(2, -2)} />;
+            return <InlineMath key={index}>{part.slice(2, -2)}</InlineMath>;
           }
           // It's a regular text part, we can render it as a span or fragment
           return <span key={index}>{part}</span>;
