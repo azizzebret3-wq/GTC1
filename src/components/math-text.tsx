@@ -12,9 +12,11 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
         return null;
     }
     
+    // Le texte est censé arriver déjà formaté avec les délimiteurs ($ et $$) depuis la source (IA ou saisie manuelle).
+    // Le composant MathpixMarkdown se charge du rendu.
     return (
         <MathpixLoader>
-            <MathpixMarkdown text={text} key={text} />
+            <MathpixMarkdown text={text} />
         </MathpixLoader>
     );
 };
