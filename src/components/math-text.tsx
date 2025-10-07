@@ -1,3 +1,4 @@
+// src/components/math-text.tsx
 'use client';
 import React, { useMemo } from 'react';
 import katex from 'katex';
@@ -7,45 +8,46 @@ interface MathTextProps {
 }
 
 const MathText: React.FC<MathTextProps> = ({ text }) => {
-  const renderedParts = useMemo(() => {
+  const renderedContent = useMemo(() => {
     if (!text) {
       return null;
     }
 
-    // Regex to find math expressions delimited by $...$ (inline) or $$...$$ (block).
-    const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
-    const parts = text.split(regex);
+    // Split the input text by newlines to process each line separately.
+    const lines = text.split('\n');
 
-    return parts.map((part, index) => {
-      if (part.match(regex)) {
-        const isBlock = part.startsWith('$$');
-        const math = part.substring(isBlock ? 2 : 1, part.length - (isBlock ? 2 : 1));
-        
-        try {
-          const html = katex.renderToString(math, {
-            throwOnError: false,
-            displayMode: isBlock,
-          });
+    return lines.map((line, lineIndex) => {
+      // For each line, find math expressions.
+      const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
+      const parts = line.split(regex);
 
-          // Using dangerouslySetInnerHTML to render the KaTeX output
-          return (
-            <span key={index} dangerouslySetInnerHTML={{ __html: html }} />
-          );
-
-        } catch (error) {
-          console.error('KaTeX rendering error:', error);
-          // In case of error, just display the raw math text.
-          return <code key={index} className="text-red-500">{part}</code>;
+      const renderedParts = parts.map((part, partIndex) => {
+        if (part.match(regex)) {
+          const isBlock = part.startsWith('$$');
+          const math = part.substring(isBlock ? 2 : 1, part.length - (isBlock ? 2 : 1));
+          
+          try {
+            const html = katex.renderToString(math, {
+              throwOnError: false,
+              displayMode: isBlock,
+            });
+            return <span key={partIndex} dangerouslySetInnerHTML={{ __html: html }} />;
+          } catch (error) {
+            console.error('KaTeX rendering error:', error);
+            return <code key={partIndex} className="text-red-500">{part}</code>;
+          }
+        } else {
+          // It's a regular text part.
+          return <span key={partIndex}>{part}</span>;
         }
-
-      } else {
-        // It's a regular text part
-        return <span key={index}>{part}</span>;
-      }
+      });
+      
+      // Render each line in its own div to preserve line breaks.
+      return <div key={lineIndex}>{renderedParts}</div>;
     });
   }, [text]);
 
-  return <React.Fragment>{renderedParts}</React.Fragment>;
+  return <React.Fragment>{renderedContent}</React.Fragment>;
 };
 
 export default MathText;
