@@ -141,7 +141,7 @@ function TakeQuizComponent() {
 
     const newResults: QuestionResult[] = quiz.questions.map((q, index) => {
       const userSelection = userAnswers[index] || [];
-      const correctAnswers = q.correctAnswers;
+      const correctAnswers = q.correctAnswers || [];
       
       const isCorrect = userSelection.length === correctAnswers.length &&
                         userSelection.every(answer => correctAnswers.includes(answer)) &&
@@ -337,21 +337,19 @@ function TakeQuizComponent() {
                   {result.options.map(option => {
                     const isSelected = result.selectedAnswers.includes(option);
                     const isCorrect = result.correctAnswers.includes(option);
-                    const Icon = isCorrect ? CheckCircle : XCircle;
                     
-                    let className = 'text-gray-700 dark:text-gray-300';
-                    if (isSelected && isCorrect) className = 'text-green-600 dark:text-green-400 font-bold';
-                    else if (isSelected && !isCorrect) className = 'text-red-600 dark:text-red-400 line-through';
-                    else if (!isSelected && isCorrect) className = 'text-green-600 dark:text-green-400';
+                    let itemClass = "bg-white/50 dark:bg-black/20";
+                    if (isSelected && !isCorrect) itemClass = "bg-red-500/20 text-red-800 dark:text-red-300";
+                    if (isCorrect) itemClass = "bg-green-500/20 text-green-800 dark:text-green-300";
 
                     return (
-                      <div key={option} className="flex items-center gap-3 text-sm p-2 rounded-md bg-white/50 dark:bg-black/20">
-                         {isSelected || isCorrect ? (
-                            <Icon className={`w-5 h-5 ${isCorrect ? 'text-green-500' : 'text-red-500'}`} />
-                         ) : (
-                            <div className="w-5 h-5" /> // Placeholder for alignment
-                         )}
-                        <span className={className}><MathText text={option} /></span>
+                      <div key={option} className={`flex items-center gap-3 text-sm p-2 rounded-md ${itemClass}`}>
+                         {(isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-500" />}
+                         {(isSelected && !isCorrect) && <XCircle className="w-5 h-5 text-red-500" />}
+                         {(!isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-500 opacity-50" />}
+                         {(!isSelected && !isCorrect) && <div className="w-5 h-5" /> /* Placeholder */}
+                        
+                        <span className="flex-1"><MathText text={option} /></span>
                       </div>
                     );
                   })}

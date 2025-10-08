@@ -301,10 +301,11 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
 
     const handleCorrectAnswerChange = (optionValue: string) => {
         if (!optionValue) return;
-        const isChecked = correctAnswers.includes(optionValue);
+        const currentCorrectAnswers = watch(`questions.${qIndex}.correctAnswers`) || [];
+        const isChecked = currentCorrectAnswers.includes(optionValue);
         const newCorrectAnswers = isChecked
-            ? correctAnswers.filter((a: string) => a !== optionValue)
-            : [...correctAnswers, optionValue];
+            ? currentCorrectAnswers.filter((a: string) => a !== optionValue)
+            : [...currentCorrectAnswers, optionValue];
         setValue(`questions.${qIndex}.correctAnswers`, newCorrectAnswers, { shouldValidate: true, shouldDirty: true });
     };
     
@@ -363,11 +364,17 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                 <div className="space-y-2 mt-1">
                     {options.map((option, optionIndex) => (
                         <div key={option.id} className="flex items-center gap-2">
-                             <Checkbox
-                                checked={correctAnswers.includes(questionOptions?.[optionIndex]?.value)}
-                                onCheckedChange={() => handleCorrectAnswerChange(questionOptions?.[optionIndex]?.value)}
-                                disabled={!questionOptions?.[optionIndex]?.value}
-                             />
+                             <Controller
+                                control={control}
+                                name={`questions.${qIndex}.options.${optionIndex}.value`}
+                                render={({ field }) => (
+                                    <Checkbox
+                                        checked={correctAnswers.includes(field.value)}
+                                        onCheckedChange={() => handleCorrectAnswerChange(field.value)}
+                                        disabled={!field.value}
+                                    />
+                                )}
+                            />
                             <div className="flex-1 grid grid-cols-2 gap-2">
                                 <Input {...register(`questions.${qIndex}.options.${optionIndex}.value`)} placeholder={`Option ${optionIndex + 1}`} />
                                 <div className="p-2 border rounded-md bg-background text-sm flex items-center">
@@ -388,6 +395,14 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
     const { control, register, handleSubmit, watch, formState: { errors, isSubmitting } } = useFormContext<QuizFormData>();
     const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control, name: "questions" });
     const isMockExam = watch("isMockExam");
+    const questionsContainerRef = useRef<HTMLDivElement>(null);
+    
+    const handleAddQuestion = () => {
+        appendQuestion({ question: '', options: [{ value: '' }, { value: '' }], correctAnswers: [], explanation: '' });
+        setTimeout(() => {
+            questionsContainerRef.current?.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
     
     return (
         <form onSubmit={handleSubmit(onFormSubmit)} className="flex-1 overflow-hidden flex flex-col gap-4">
@@ -458,14 +473,14 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
                         <Button type="button" variant="outline" size="sm" onClick={handleOpenAiDialog}>
                             <BrainCircuit className="w-4 h-4 mr-2"/> Générer (IA)
                         </Button>
-                        <Button type="button" size="sm" onClick={() => appendQuestion({ question: '', options: [{ value: '' }, { value: '' }], correctAnswers: [], explanation: '' })}>
+                        <Button type="button" size="sm" onClick={handleAddQuestion}>
                             <PlusCircle className="w-4 h-4 mr-2"/> Ajouter
                         </Button>
                     </div>
                 </div>
                 {errors.questions?.root && <p className="text-red-500 text-sm">{errors.questions.root.message}</p>}
                 
-                <div className="space-y-6">
+                <div className="space-y-6" ref={questionsContainerRef}>
                 {questions.map((question, qIndex) => (
                     <Card key={question.id} className="bg-muted/50 p-4">
                         <QuestionsForm qIndex={qIndex} removeQuestion={removeQuestion} />
@@ -578,6 +593,8 @@ export default function QuizAdminPanel() {
   };
 
   const onFormSubmit = async (formData: QuizFormData) => {
+    // This is the CRITICAL fix.
+    // We ensure `correctAnswers` is an array of strings by mapping the options.
     const quizData: NewQuizData = {
       title: formData.title,
       description: formData.description,
@@ -589,7 +606,12 @@ export default function QuizAdminPanel() {
       questions: formData.questions.map(q => ({
         question: q.question,
         options: q.options.map(opt => opt.value),
-        correctAnswers: q.correctAnswers,
+        correctAnswers: q.correctAnswers.map(correct => {
+          // This ensures that even if the form state is complex,
+          // we only save the string value.
+          const option = q.options.find(opt => opt.value === correct);
+          return option ? option.value : correct;
+        }),
         explanation: q.explanation,
       })),
       total_questions: formData.questions.length,
@@ -796,5 +818,3 @@ export default function QuizAdminPanel() {
     </>
   );
 }
-
-    
