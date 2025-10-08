@@ -253,11 +253,15 @@ function TakeQuizComponent() {
   
   const handleAnswerChange = (option: string) => {
     const newAnswers = [...userAnswers];
-    const currentAnswers = newAnswers[currentQuestionIndex] || [];
-    const updatedAnswers = currentAnswers.includes(option)
-      ? currentAnswers.filter(item => item !== option)
-      : [...currentAnswers, option];
-    newAnswers[currentQuestionIndex] = updatedAnswers;
+    let currentAnswers = [...(newAnswers[currentQuestionIndex] || [])];
+    
+    if (currentAnswers.includes(option)) {
+        currentAnswers = currentAnswers.filter((ans) => ans !== option);
+    } else {
+        currentAnswers.push(option);
+    }
+    
+    newAnswers[currentQuestionIndex] = currentAnswers;
     setUserAnswers(newAnswers);
   };
 
