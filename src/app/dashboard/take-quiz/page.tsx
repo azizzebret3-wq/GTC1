@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, XCircle, Clock, Info, Award, Activity, Loader, ArrowLeft, ArrowRight, Heart } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Info, Award, Activity, Loader, ArrowLeft, ArrowRight, Heart, Users } from 'lucide-react';
 import { getQuizzesFromFirestore, Quiz, saveAttemptToFirestore } from '@/lib/firestore.service';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth.tsx';
@@ -56,6 +56,55 @@ const EncouragementCard = ({ score, total }: { score: number; total: number }) =
         <p>{message}</p>
       </CardContent>
     </Card>
+  );
+};
+
+const RankingCard = ({ score, totalQuestions }: { score: number; totalQuestions: number }) => {
+  const [totalParticipants, setTotalParticipants] = useState(0);
+  const [rank, setRank] = useState(0);
+
+  useEffect(() => {
+    // Simuler un nombre de participants et un classement
+    const simulatedParticipants = Math.floor(Math.random() * 51) + 50; // Entre 50 et 100
+    setTotalParticipants(simulatedParticipants);
+
+    // Crée une liste de scores simulés
+    const otherScores = Array.from({ length: simulatedParticipants - 1 }, () => Math.floor(Math.random() * (totalQuestions + 1)));
+    const allScores = [...otherScores, score];
+    
+    // Calcule le rang
+    const sortedScores = allScores.sort((a, b) => b - a);
+    const userRank = sortedScores.indexOf(score) + 1;
+    setRank(userRank);
+
+  }, [score, totalQuestions]);
+  
+  if (rank === 0) return null;
+
+  const getRankingMessage = () => {
+      const percentageRank = (rank / totalParticipants) * 100;
+      if (rank === 1) return "Félicitations ! Vous êtes premier ! 🏆";
+      if (percentageRank <= 10) return "Dans le top 10% ! Excellent !";
+      if (percentageRank <= 25) return "Dans le premier quart. Très bonne performance !";
+      if (percentageRank <= 50) return "Dans la première moitié. Continuez vos efforts !";
+      return "Continuez à vous entraîner pour améliorer votre classement.";
+  };
+
+
+  return (
+      <Card className="glassmorphism shadow-xl">
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                  <Users className="w-6 h-6 text-indigo-500"/>
+                  Votre Classement
+              </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-2">
+              <p className="text-4xl font-black">{rank}<span className="text-2xl font-bold text-muted-foreground">ème</span></p>
+              <p className="text-muted-foreground">sur {totalParticipants} participants (simulé)</p>
+              <p className="font-semibold text-indigo-600 pt-2">{getRankingMessage()}</p>
+          </CardContent>
+      </Card>
   );
 };
 
@@ -267,6 +316,8 @@ function TakeQuizComponent() {
             </Button>
           </CardContent>
         </Card>
+
+        {quiz.isMockExam && <RankingCard score={score} totalQuestions={quiz.questions.length} />}
 
         <EncouragementCard score={score} total={quiz.questions.length} />
         
