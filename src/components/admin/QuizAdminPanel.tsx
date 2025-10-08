@@ -352,6 +352,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                     <Controller
                         control={control}
                         name={`questions.${qIndex}.correctAnswers`}
+                        defaultValue={[]}
                         render={({ field: { onChange, value: correctAnswersValue } }) => (
                             <>
                                 {options.map((option, optionIndex) => {
