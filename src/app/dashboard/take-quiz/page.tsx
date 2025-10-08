@@ -141,15 +141,18 @@ function TakeQuizComponent() {
 
     const newResults: QuestionResult[] = quiz.questions.map((q, index) => {
       const userSelection = userAnswers[index] || [];
-      const isCorrect =
-        q.correctAnswers.length === userSelection.length &&
-        q.correctAnswers.every((ans) => userSelection.includes(ans));
+      const correctAnswers = q.correctAnswers;
       
+      // Strict check for correctness
+      const isCorrect = userSelection.length === correctAnswers.length &&
+                        userSelection.every(answer => correctAnswers.includes(answer)) &&
+                        correctAnswers.every(answer => userSelection.includes(answer));
+
       return {
         question: q.question,
         options: q.options,
         selectedAnswers: userSelection,
-        correctAnswers: q.correctAnswers,
+        correctAnswers: correctAnswers,
         isCorrect,
         explanation: q.explanation,
       };
@@ -344,11 +347,11 @@ function TakeQuizComponent() {
 
                     return (
                       <div key={option} className="flex items-center gap-3 text-sm p-2 rounded-md bg-white/50 dark:bg-black/20">
-                         {isSelected ? (
+                         {isSelected || isCorrect ? (
                             <Icon className={`w-5 h-5 ${isCorrect ? 'text-green-500' : 'text-red-500'}`} />
-                        ) : (
-                             isCorrect && <CheckCircle className="w-5 h-5 text-green-500 opacity-50" />
-                        )}
+                         ) : (
+                            <div className="w-5 h-5" /> // Placeholder for alignment
+                         )}
                         <span className={className}><MathText text={option} /></span>
                       </div>
                     );
