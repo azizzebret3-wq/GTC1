@@ -272,7 +272,6 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
         name: `questions.${qIndex}.options`,
     });
 
-    const questionOptions = watch(`questions.${qIndex}.options`);
     const correctAnswers = watch(`questions.${qIndex}.correctAnswers`) || [];
 
     const activeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -302,8 +301,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
     const handleCorrectAnswerChange = (optionValue: string) => {
         if (!optionValue) return;
         const currentCorrectAnswers = watch(`questions.${qIndex}.correctAnswers`) || [];
-        const isChecked = currentCorrectAnswers.includes(optionValue);
-        const newCorrectAnswers = isChecked
+        const newCorrectAnswers = currentCorrectAnswers.includes(optionValue)
             ? currentCorrectAnswers.filter((a: string) => a !== optionValue)
             : [...currentCorrectAnswers, optionValue];
         setValue(`questions.${qIndex}.correctAnswers`, newCorrectAnswers, { shouldValidate: true, shouldDirty: true });
@@ -593,8 +591,6 @@ export default function QuizAdminPanel() {
   };
 
   const onFormSubmit = async (formData: QuizFormData) => {
-    // This is the CRITICAL fix.
-    // We ensure `correctAnswers` is an array of strings by mapping the options.
     const quizData: NewQuizData = {
       title: formData.title,
       description: formData.description,
@@ -606,12 +602,7 @@ export default function QuizAdminPanel() {
       questions: formData.questions.map(q => ({
         question: q.question,
         options: q.options.map(opt => opt.value),
-        correctAnswers: q.correctAnswers.map(correct => {
-          // This ensures that even if the form state is complex,
-          // we only save the string value.
-          const option = q.options.find(opt => opt.value === correct);
-          return option ? option.value : correct;
-        }),
+        correctAnswers: q.correctAnswers,
         explanation: q.explanation,
       })),
       total_questions: formData.questions.length,
