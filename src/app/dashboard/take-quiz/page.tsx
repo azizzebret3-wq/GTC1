@@ -253,18 +253,19 @@ function TakeQuizComponent() {
     }
   };
   
-  const handleAnswerChange = (option: string) => {
-    const newAnswers = [...userAnswers];
-    let currentAnswers = [...(newAnswers[currentQuestionIndex] || [])];
-    
-    if (currentAnswers.includes(option)) {
-        currentAnswers = currentAnswers.filter((ans) => ans !== option);
-    } else {
-        currentAnswers.push(option);
-    }
-    
-    newAnswers[currentQuestionIndex] = currentAnswers;
-    setUserAnswers(newAnswers);
+  const handleAnswerChange = (option: string, checked: boolean) => {
+    setUserAnswers(prevAnswers => {
+      const newAnswers = [...prevAnswers];
+      const currentAnswersForQuestion = newAnswers[currentQuestionIndex] || [];
+      if (checked) {
+        newAnswers[currentQuestionIndex] = [...currentAnswersForQuestion, option];
+      } else {
+        newAnswers[currentQuestionIndex] = currentAnswersForQuestion.filter(
+          (ans) => ans !== option
+        );
+      }
+      return newAnswers;
+    });
   };
 
   if (loading || !quiz) {
@@ -339,14 +340,14 @@ function TakeQuizComponent() {
                     const isCorrect = result.correctAnswers.includes(option);
                     
                     let itemClass = "bg-white/50 dark:bg-black/20";
-                    if (isSelected && !isCorrect) itemClass = "bg-red-500/20 text-red-800 dark:text-red-300";
-                    if (isCorrect) itemClass = "bg-green-500/20 text-green-800 dark:text-green-300";
+                    if (isSelected && !isCorrect) itemClass = "bg-red-200/80 dark:bg-red-900/50";
+                    if (isCorrect) itemClass = "bg-green-200/80 dark:bg-green-900/50";
 
                     return (
                       <div key={option} className={`flex items-center gap-3 text-sm p-2 rounded-md ${itemClass}`}>
-                         {(isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-500" />}
-                         {(isSelected && !isCorrect) && <XCircle className="w-5 h-5 text-red-500" />}
-                         {(!isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-500 opacity-50" />}
+                         {(isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-600" />}
+                         {(isSelected && !isCorrect) && <XCircle className="w-5 h-5 text-red-600" />}
+                         {(!isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-600 opacity-50" />}
                          {(!isSelected && !isCorrect) && <div className="w-5 h-5" /> /* Placeholder */}
                         
                         <span className="flex-1"><MathText text={option} /></span>
@@ -400,7 +401,7 @@ function TakeQuizComponent() {
                     <Checkbox 
                         id={`option-${index}`}
                         checked={selectedAnswersForCurrent.includes(option)}
-                        onCheckedChange={() => handleAnswerChange(option)}
+                        onCheckedChange={(checked) => handleAnswerChange(option, !!checked)}
                     />
                     <Label htmlFor={`option-${index}`} className="font-medium flex-1 cursor-pointer">
                         <MathText text={option} />
