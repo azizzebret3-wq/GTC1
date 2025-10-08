@@ -271,9 +271,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
         control,
         name: `questions.${qIndex}.options`,
     });
-
-    const correctAnswers = watch(`questions.${qIndex}.correctAnswers`) || [];
-
+    
     const activeTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
     const insertToTextarea = (field: "question" | "explanation", snippet: string) => {
@@ -296,15 +294,6 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                 textarea.setSelectionRange(start + snippet.length, start + snippet.length);
             }
         }, 0);
-    };
-
-    const handleCorrectAnswerChange = (optionValue: string) => {
-        if (!optionValue) return;
-        const currentCorrectAnswers = watch(`questions.${qIndex}.correctAnswers`) || [];
-        const newCorrectAnswers = currentCorrectAnswers.includes(optionValue)
-            ? currentCorrectAnswers.filter((a: string) => a !== optionValue)
-            : [...currentCorrectAnswers, optionValue];
-        setValue(`questions.${qIndex}.correctAnswers`, newCorrectAnswers, { shouldValidate: true, shouldDirty: true });
     };
     
     const questionErrors = errors.questions?.[qIndex];
@@ -360,29 +349,42 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                  {questionErrors?.correctAnswers && <p className="text-red-500 text-xs mt-1">{questionErrors.correctAnswers.message}</p>}
 
                 <div className="space-y-2 mt-1">
-                    {options.map((option, optionIndex) => (
-                        <div key={option.id} className="flex items-center gap-2">
-                             <Controller
-                                control={control}
-                                name={`questions.${qIndex}.options.${optionIndex}.value`}
-                                render={({ field }) => (
-                                    <Checkbox
-                                        checked={correctAnswers.includes(field.value)}
-                                        onCheckedChange={() => handleCorrectAnswerChange(field.value)}
-                                        disabled={!field.value}
-                                    />
-                                )}
-                            />
-                            <div className="flex-1 grid grid-cols-2 gap-2">
-                                <Input {...register(`questions.${qIndex}.options.${optionIndex}.value`)} placeholder={`Option ${optionIndex + 1}`} />
-                                <div className="p-2 border rounded-md bg-background text-sm flex items-center">
-                                    <MathText text={watch(`questions.${qIndex}.options.${optionIndex}.value`) || ''} />
-                                </div>
-                                {questionErrors?.options?.[optionIndex]?.value && <p className="text-red-500 text-xs mt-1 col-span-2">{questionErrors.options[optionIndex].value.message}</p>}
-                            </div>
-                            <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeOption(optionIndex)}><X className="w-4 h-4"/></Button>
-                        </div>
-                    ))}
+                    <Controller
+                        control={control}
+                        name={`questions.${qIndex}.correctAnswers`}
+                        render={({ field: { onChange, value: correctAnswersValue } }) => (
+                            <>
+                                {options.map((option, optionIndex) => {
+                                    const optionValue = watch(`questions.${qIndex}.options.${optionIndex}.value`);
+                                    return (
+                                        <div key={option.id} className="flex items-center gap-2">
+                                            <Checkbox
+                                                checked={correctAnswersValue?.includes(optionValue)}
+                                                onCheckedChange={(checked) => {
+                                                    if (!optionValue) return;
+                                                    const currentAnswers = correctAnswersValue || [];
+                                                    if (checked) {
+                                                        onChange([...currentAnswers, optionValue]);
+                                                    } else {
+                                                        onChange(currentAnswers.filter((v) => v !== optionValue));
+                                                    }
+                                                }}
+                                                disabled={!optionValue}
+                                            />
+                                            <div className="flex-1 grid grid-cols-2 gap-2">
+                                                <Input {...register(`questions.${qIndex}.options.${optionIndex}.value`)} placeholder={`Option ${optionIndex + 1}`} />
+                                                <div className="p-2 border rounded-md bg-background text-sm flex items-center">
+                                                    <MathText text={watch(`questions.${qIndex}.options.${optionIndex}.value`) || ''} />
+                                                </div>
+                                                {questionErrors?.options?.[optionIndex]?.value && <p className="text-red-500 text-xs mt-1 col-span-2">{questionErrors.options[optionIndex].value.message}</p>}
+                                            </div>
+                                            <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeOption(optionIndex)}><X className="w-4 h-4"/></Button>
+                                        </div>
+                                    );
+                                })}
+                            </>
+                        )}
+                    />
                 </div>
             </div>
         </div>
