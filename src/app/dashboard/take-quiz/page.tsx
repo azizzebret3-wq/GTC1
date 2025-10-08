@@ -143,7 +143,6 @@ function TakeQuizComponent() {
       const userSelection = userAnswers[index] || [];
       const correctAnswers = q.correctAnswers;
       
-      // Strict check for correctness
       const isCorrect = userSelection.length === correctAnswers.length &&
                         userSelection.every(answer => correctAnswers.includes(answer)) &&
                         correctAnswers.every(answer => userSelection.includes(answer));
@@ -450,3 +449,5 @@ export default function TakeQuizPage() {
         </React.Suspense>
     )
 }
+
+    
