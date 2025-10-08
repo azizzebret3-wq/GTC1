@@ -352,40 +352,38 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
                     <Controller
                         control={control}
                         name={`questions.${qIndex}.correctAnswers`}
-                        defaultValue={[]}
-                        render={({ field: { onChange, value: correctAnswersValue } }) => (
-                            <>
-                                {options.map((option, optionIndex) => {
-                                    const optionValue = watch(`questions.${qIndex}.options.${optionIndex}.value`);
-                                    return (
-                                        <div key={option.id} className="flex items-center gap-2">
-                                            <Checkbox
-                                                checked={correctAnswersValue?.includes(optionValue)}
-                                                onCheckedChange={(checked) => {
-                                                    if (!optionValue) return;
-                                                    const currentAnswers = correctAnswersValue || [];
-                                                    if (checked) {
-                                                        onChange([...currentAnswers, optionValue]);
-                                                    } else {
-                                                        onChange(currentAnswers.filter((v) => v !== optionValue));
-                                                    }
-                                                }}
-                                                disabled={!optionValue}
-                                            />
-                                            <div className="flex-1 grid grid-cols-2 gap-2">
-                                                <Input {...register(`questions.${qIndex}.options.${optionIndex}.value`)} placeholder={`Option ${optionIndex + 1}`} />
-                                                <div className="p-2 border rounded-md bg-background text-sm flex items-center">
-                                                    <MathText text={watch(`questions.${qIndex}.options.${optionIndex}.value`) || ''} />
-                                                </div>
-                                                {questionErrors?.options?.[optionIndex]?.value && <p className="text-red-500 text-xs mt-1 col-span-2">{questionErrors.options[optionIndex].value.message}</p>}
-                                            </div>
-                                            <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeOption(optionIndex)}><X className="w-4 h-4"/></Button>
-                                        </div>
-                                    );
-                                })}
-                            </>
+                        render={({ field }) => (
+                          <>
+                            {options.map((option, optionIndex) => {
+                              const optionValue = watch(`questions.${qIndex}.options.${optionIndex}.value`);
+                              return (
+                                <div key={option.id} className="flex items-center gap-2">
+                                  <Checkbox
+                                    checked={field.value?.includes(optionValue)}
+                                    onCheckedChange={(checked) => {
+                                      if (!optionValue) return;
+                                      const currentAnswers = field.value || [];
+                                      const newAnswers = checked
+                                        ? [...currentAnswers, optionValue]
+                                        : currentAnswers.filter((v) => v !== optionValue);
+                                      field.onChange(newAnswers);
+                                    }}
+                                    disabled={!optionValue}
+                                  />
+                                  <div className="flex-1 grid grid-cols-2 gap-2">
+                                    <Input {...register(`questions.${qIndex}.options.${optionIndex}.value`)} placeholder={`Option ${optionIndex + 1}`} />
+                                    <div className="p-2 border rounded-md bg-background text-sm flex items-center">
+                                      <MathText text={watch(`questions.${qIndex}.options.${optionIndex}.value`) || ''} />
+                                    </div>
+                                    {questionErrors?.options?.[optionIndex]?.value && <p className="text-red-500 text-xs mt-1 col-span-2">{questionErrors.options[optionIndex].value.message}</p>}
+                                  </div>
+                                  <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeOption(optionIndex)}><X className="w-4 h-4" /></Button>
+                                </div>
+                              );
+                            })}
+                          </>
                         )}
-                    />
+                      />
                 </div>
             </div>
         </div>
@@ -396,13 +394,9 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
     const { control, register, handleSubmit, watch, formState: { errors, isSubmitting } } = useFormContext<QuizFormData>();
     const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control, name: "questions" });
     const isMockExam = watch("isMockExam");
-    const questionsContainerRef = useRef<HTMLDivElement>(null);
     
     const handleAddQuestion = () => {
         appendQuestion({ question: '', options: [{ value: '' }, { value: '' }], correctAnswers: [], explanation: '' });
-        setTimeout(() => {
-            questionsContainerRef.current?.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
     }
     
     return (
@@ -465,25 +459,28 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
             </Card>
 
             <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Questions</h3>
-                    <div className="flex gap-2">
-                         <Button type="button" variant="outline" size="sm" onClick={handleOpenShuffleDialog}>
-                            <Shuffle className="w-4 h-4 mr-2"/> Sur Mesure
-                        </Button>
-                        <Button type="button" variant="outline" size="sm" onClick={handleOpenAiDialog}>
-                            <BrainCircuit className="w-4 h-4 mr-2"/> Générer (IA)
-                        </Button>
-                        <Button type="button" size="sm" onClick={handleAddQuestion}>
-                            <PlusCircle className="w-4 h-4 mr-2"/> Ajouter
-                        </Button>
+                <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-2">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold">Questions</h3>
+                        <div className="flex gap-2">
+                            <Button type="button" variant="outline" size="sm" onClick={handleOpenShuffleDialog}>
+                                <Shuffle className="w-4 h-4 mr-2"/> Sur Mesure
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" onClick={handleOpenAiDialog}>
+                                <BrainCircuit className="w-4 h-4 mr-2"/> Générer (IA)
+                            </Button>
+                            <Button type="button" size="sm" onClick={handleAddQuestion}>
+                                <PlusCircle className="w-4 h-4 mr-2"/> Ajouter
+                            </Button>
+                        </div>
                     </div>
                 </div>
+
                 {errors.questions?.root && <p className="text-red-500 text-sm">{errors.questions.root.message}</p>}
                 
-                <div className="space-y-6" ref={questionsContainerRef}>
+                <div className="space-y-6">
                 {questions.map((question, qIndex) => (
-                    <Card key={question.id} className="bg-muted/50 p-4">
+                    <Card key={question.id} className="bg-muted/50 p-4" id={`question-${qIndex}`}>
                         <QuestionsForm qIndex={qIndex} removeQuestion={removeQuestion} />
                     </Card>
                 ))}
@@ -491,11 +488,11 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
             </div>
             </div>
             
-            <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleCloseDialog} disabled={isSubmitting}>Annuler</Button>
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <><Loader className="w-4 h-4 mr-2 animate-spin"/>Enregistrement...</> : <><Save className="w-4 h-4 mr-2"/>Enregistrer</>}
-            </Button>
+            <DialogFooter className="sticky bottom-0 bg-background py-4">
+              <Button type="button" variant="outline" onClick={handleCloseDialog} disabled={isSubmitting}>Annuler</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <><Loader className="w-4 h-4 mr-2 animate-spin"/>Enregistrement...</> : <><Save className="w-4 h-4 mr-2"/>Enregistrer</>}
+              </Button>
             </DialogFooter>
         </form>
     )
@@ -653,7 +650,7 @@ export default function QuizAdminPanel() {
       const result: GenerateQuizOutput = await generateQuiz({ topic, numberOfQuestions: numQuestions, difficulty });
       const { quiz } = result;
 
-      reset({
+      formMethods.reset({
         ...formMethods.getValues(),
         title: quiz.title,
         description: quiz.description,
@@ -697,7 +694,7 @@ export default function QuizAdminPanel() {
       const shuffled = filteredQuestions.sort(() => 0.5 - Math.random());
       const selectedQuestions = shuffled.slice(0, numQuestions);
 
-      reset({
+      formMethods.reset({
           ...formMethods.getValues(),
           title: `Quiz sur mesure (${new Date().toLocaleDateString()})`,
           description: `Un quiz de ${numQuestions} questions sur ${categories.join(', ')}`,

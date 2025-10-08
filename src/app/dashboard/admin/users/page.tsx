@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Loader, Shield, UserCheck, MoreHorizontal, Check, ChevronsUpDown, ArrowLeft, Crown } from "lucide-react";
+import { Users, Loader, Shield, UserCheck, MoreHorizontal, Check, ChevronsUpDown, ArrowLeft, Crown, Search } from "lucide-react";
 import { AppUser, getUsersFromFirestore, updateUserRoleInFirestore, updateUserSubscriptionInFirestore } from '@/lib/firestore.service';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from '@/components/ui/input';
 
 
 type SubscriptionValue = "gratuit" | "premium_mensuel" | "premium_annuel";
@@ -47,6 +48,7 @@ export default function AdminUsersPage() {
   const [newSubscription, setNewSubscription] = useState<SubscriptionValue>('gratuit');
   const [isSaving, setIsSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const router = useRouter();
 
@@ -144,6 +146,9 @@ export default function AdminUsersPage() {
     return 'Gratuit';
   }
 
+  const filteredUsers = users.filter(user => 
+    user.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -171,12 +176,22 @@ export default function AdminUsersPage() {
             Retour à l'admin
         </Button>
       </div>
+
+       <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Rechercher par numéro de téléphone..."
+            className="pl-9 h-10 rounded-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       
       <Card className="glassmorphism shadow-xl">
         <CardHeader>
           <CardTitle>Liste des utilisateurs inscrits</CardTitle>
           <CardDescription>
-            Actuellement, {users.length} utilisateurs sont inscrits sur la plateforme.
+            Actuellement, {filteredUsers.length} sur {users.length} utilisateurs affichés.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -189,7 +204,7 @@ export default function AdminUsersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom</TableHead>
-                  <TableHead className="hidden lg:table-cell">Téléphone</TableHead>
+                  <TableHead>Téléphone</TableHead>
                   <TableHead>Rôle</TableHead>
                   <TableHead>Abonnement</TableHead>
                   <TableHead className="hidden md:table-cell">Expire le</TableHead>
@@ -200,10 +215,10 @@ export default function AdminUsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <TableRow key={user.uid}>
                     <TableCell className="font-medium">{user.fullName || 'N/A'}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{user.phone}</TableCell>
+                    <TableCell>{user.phone}</TableCell>
                     <TableCell>
                       <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>
                         {user.role === 'admin' ? <Shield className="mr-1 h-3 w-3"/> : <UserCheck className="mr-1 h-3 w-3"/>}
