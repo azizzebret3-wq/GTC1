@@ -144,8 +144,7 @@ function TakeQuizComponent() {
       const correctAnswers = q.correctAnswers || [];
       
       const isCorrect = userSelection.length === correctAnswers.length &&
-                        userSelection.every(answer => correctAnswers.includes(answer)) &&
-                        correctAnswers.every(answer => userSelection.includes(answer));
+                        userSelection.sort().every((answer, i) => answer === correctAnswers.sort()[i]);
 
       return {
         question: q.question,
@@ -401,7 +400,7 @@ function TakeQuizComponent() {
                     <Checkbox 
                         id={`option-${index}`}
                         checked={selectedAnswersForCurrent.includes(option)}
-                        onCheckedChange={(checked) => handleAnswerChange(option, !!checked)}
+                        onCheckedChange={(checked) => handleAnswerChange(option, checked === true)}
                     />
                     <Label htmlFor={`option-${index}`} className="font-medium flex-1 cursor-pointer">
                         <MathText text={option} />
