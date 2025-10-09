@@ -64,18 +64,33 @@ const RankingCard = ({ score, totalQuestions }: { score: number; totalQuestions:
   const [rank, setRank] = useState(0);
 
   useEffect(() => {
-    // Simuler un nombre de participants et un classement
-    const simulatedParticipants = Math.floor(Math.random() * 51) + 50; // Entre 50 et 100
+    // Simuler un nombre de participants pour donner un contexte
+    const simulatedParticipants = Math.floor(Math.random() * 51) + 150; // Entre 150 et 200
     setTotalParticipants(simulatedParticipants);
 
-    // Crée une liste de scores simulés
-    const otherScores = Array.from({ length: simulatedParticipants - 1 }, () => Math.floor(Math.random() * (totalQuestions + 1)));
-    const allScores = [...otherScores, score];
+    // Normaliser le score sur une base de 50 pour la logique de classement
+    const normalizedScore = (score / totalQuestions) * 50;
+
+    let calculatedRank = 0;
     
-    // Calcule le rang
-    const sortedScores = allScores.sort((a, b) => b - a);
-    const userRank = sortedScores.indexOf(score) + 1;
-    setRank(userRank);
+    // Fonction pour générer un nombre aléatoire dans une plage
+    const randomInRange = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    if (normalizedScore === 50) {
+      calculatedRank = 1; // Premier
+    } else if (normalizedScore >= 45) {
+      calculatedRank = randomInRange(2, 5); // 2ème à 5ème
+    } else if (normalizedScore >= 40) {
+      calculatedRank = randomInRange(6, 15); // 6ème à 15ème
+    } else if (normalizedScore >= 30) {
+      calculatedRank = randomInRange(16, 40); // 16ème à 40ème
+    } else if (normalizedScore >= 20) {
+      calculatedRank = randomInRange(41, 75); // 41ème à 75ème
+    } else {
+      calculatedRank = randomInRange(76, simulatedParticipants); // Au-delà
+    }
+
+    setRank(calculatedRank);
 
   }, [score, totalQuestions]);
   
@@ -144,7 +159,7 @@ function TakeQuizComponent() {
       const correctAnswers = q.correctAnswers || [];
       
       const isCorrect = userSelection.length === correctAnswers.length &&
-                        userSelection.sort().every((answer, i) => answer === correctAnswers.sort()[i]);
+                        userSelection.sort().every((answer, i) => answer === [...correctAnswers].sort()[i]);
 
       return {
         question: q.question,
@@ -232,7 +247,7 @@ function TakeQuizComponent() {
       timer = setInterval(() => {
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
-    } else if (timeLeft === 0 && !quizFinished) {
+    } else if (timeLeft <= 0 && !quizFinished) {
       handleFinishQuiz();
     }
     return () => clearInterval(timer);
@@ -330,7 +345,7 @@ function TakeQuizComponent() {
         <div className="space-y-4">
           <h2 className="text-2xl font-bold flex items-center gap-2"><Activity/>Correction détaillée</h2>
           {results.map((result, index) => (
-            <Card key={index} className="glassmorphism shadow-lg border-l-4" style={{borderColor: result.isCorrect ? 'hsl(var(--chart-2))' : 'hsl(var(--destructive))'}}>
+            <Card key={index} className="glassmorphism shadow-lg">
               <CardContent className="p-6 space-y-3">
                 <div className="font-bold">{index + 1}. <MathText text={result.question} /></div>
                 <div className="space-y-2">
@@ -400,7 +415,7 @@ function TakeQuizComponent() {
                     <Checkbox 
                         id={`option-${index}`}
                         checked={selectedAnswersForCurrent.includes(option)}
-                        onCheckedChange={(checked) => handleAnswerChange(option, checked === true)}
+                        onCheckedChange={(checked) => handleAnswerChange(option, !!checked)}
                     />
                     <Label htmlFor={`option-${index}`} className="font-medium flex-1 cursor-pointer">
                         <MathText text={option} />
