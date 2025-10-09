@@ -125,6 +125,15 @@ export const saveQuizToFirestore = async (quizData: NewQuizData) => {
         createdAt: serverTimestamp() // Use server-side timestamp for consistency
     });
     console.log("Quiz document written with ID: ", docRef.id);
+
+    // After successfully saving the quiz, notify all users.
+    try {
+      await notifyAllUsersOfNewQuiz(quizData.title, docRef.id, !!quizData.isMockExam);
+    } catch (notificationError) {
+      // Log the error but don't fail the whole operation if notifications fail.
+      console.error("Failed to send new quiz notifications:", notificationError);
+    }
+
     return docRef.id;
   } catch (e) {
     console.error("Error adding document: ", e);
@@ -343,6 +352,45 @@ export const createNotification = async (notificationData: Omit<AppNotification,
         // This is a background task and should not block the user's flow.
     }
 };
+
+const notifyAllUsersOfNewQuiz = async (quizTitle: string, quizId: string, isMockExam: boolean) => {
+  try {
+    const users = await getUsersFromFirestore();
+    // We don't want to notify admins.
+    const nonAdminUsers = users.filter(user => user.role !== 'admin');
+
+    if (nonAdminUsers.length === 0) {
+      return;
+    }
+    
+    const batch = writeBatch(db);
+    const notificationsCollection = collection(db, 'notifications');
+    
+    const title = isMockExam ? "Nouveau Concours Blanc Disponible !" : "Nouveau Quiz Disponible !";
+    const description = `Le quiz "${quizTitle}" vient d'être ajouté. Relevez le défi !`;
+    const href = isMockExam ? `/dashboard/mock-exams` : `/dashboard/take-quiz?id=${quizId}`;
+
+    nonAdminUsers.forEach(user => {
+      const newNotifRef = doc(notificationsCollection); // Create a new doc reference with an auto-generated ID
+      batch.set(newNotifRef, {
+        userId: user.uid,
+        title,
+        description,
+        href,
+        isRead: false,
+        createdAt: serverTimestamp(),
+      });
+    });
+
+    await batch.commit();
+    console.log(`Sent notifications to ${nonAdminUsers.length} users for new quiz.`);
+
+  } catch (error) {
+    console.error("Error sending notifications to all users:", error);
+    // Don't re-throw, as this is a non-critical background task.
+  }
+};
+
 
 export const getUserNotifications = async (userId: string): Promise<AppNotification[]> => {
     try {
