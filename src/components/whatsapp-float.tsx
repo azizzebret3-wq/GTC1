@@ -16,7 +16,7 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function WhatsAppFloat() {
-    const whatsAppGroupLink = "https://chat.whatsapp.com/BS3jCz7dzQ47cljOBRfFRl?mode=ems_copy_t";
+    const whatsAppGroupLink = "https://chat.whatsapp.com/DtLzTRGATeJ22L3tuTGWhf?mode=ems_copy_t";
 
     return (
         <Link 

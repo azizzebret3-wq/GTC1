@@ -390,7 +390,7 @@ function HomePageContent() {
             </p>
             <div className="flex space-x-6 mt-6 md:mt-0">
                 <Link href="https://www.tiktok.com/@prepare.concours?_t=ZM-8zfqR0jZffk&_r=1" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors"><TikTokIcon className="w-6 h-6"/></Link>
-                <Link href="https://chat.whatsapp.com/BS3jCz7dzQ47cljOBRfFRl?mode=ems_copy_t" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors"><WhatsAppIcon className="w-6 h-6"/></Link>
+                <Link href="https://chat.whatsapp.com/DtLzTRGATeJ22L3tuTGWhf?mode=ems_copy_t" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors"><WhatsAppIcon className="w-6 h-6"/></Link>
             </div>
           </div>
           
