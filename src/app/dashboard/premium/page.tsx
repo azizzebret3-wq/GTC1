@@ -19,7 +19,7 @@ const premiumFeatures = [
 ];
 
 const mobileMoneyOptions = [
-    { name: "Orange Money", instruction: (amount: number) => `*144*2*1*54808048*${amount}#`},
+    { name: "Orange Money", instruction: (amount: number) => `*144*10*54808048*MONTANT#`},
     { name: "Moov Money", instruction: (amount: number) => `*555*2*1*53017160*${amount}#`},
     { name: "Wave", instruction: (amount: number) => `22654808048`},
 ];
@@ -146,7 +146,7 @@ export default function PremiumPage() {
                         <div key={method.name} className="flex items-center justify-between p-3 rounded-lg bg-background/60 border">
                             <span className="font-semibold">{method.name}</span>
                             <div className="flex items-center gap-2">
-                                <code className="text-sm font-mono bg-muted px-2 py-1 rounded">{method.name === 'Wave' ? method.instruction(1000) : method.instruction(1000).replace('1000', 'Montant')}</code>
+                                <code className="text-sm font-mono bg-muted px-2 py-1 rounded">{method.instruction(1000).replace('1000', 'Montant')}</code>
                                 <Button size="icon" variant="ghost" onClick={() => copyToClipboard(method.instruction(1000), method.name)}>
                                     <Copy className="w-4 h-4"/>
                                 </Button>
