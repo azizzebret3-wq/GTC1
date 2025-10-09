@@ -76,7 +76,7 @@ const RankingCard = ({ score, totalQuestions }: { score: number; totalQuestions:
     // Fonction pour générer un nombre aléatoire dans une plage
     const randomInRange = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-    if (normalizedScore === 50) {
+    if (normalizedScore >= 50) {
       calculatedRank = 1; // Premier
     } else if (normalizedScore >= 45) {
       calculatedRank = randomInRange(2, 5); // 2ème à 5ème
@@ -116,7 +116,7 @@ const RankingCard = ({ score, totalQuestions }: { score: number; totalQuestions:
           </CardHeader>
           <CardContent className="text-center space-y-2">
               <p className="text-4xl font-black">{rank}<span className="text-2xl font-bold text-muted-foreground">ème</span></p>
-              <p className="text-muted-foreground">sur {totalParticipants} participants (simulé)</p>
+              <p className="text-muted-foreground">sur {totalParticipants} participants</p>
               <p className="font-semibold text-indigo-600 pt-2">{getRankingMessage()}</p>
           </CardContent>
       </Card>
