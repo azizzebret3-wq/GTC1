@@ -55,8 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: data.createdAt,
         };
 
-        // Check for subscription expiry
-        if (fetchedData.subscription_type === 'premium' && fetchedData.subscription_expires_at) {
+        // Check for subscription expiry only if online
+        const isOnline = typeof window !== 'undefined' && window.navigator.onLine;
+        if (isOnline && fetchedData.subscription_type === 'premium' && fetchedData.subscription_expires_at) {
           const expiryDate = (fetchedData.subscription_expires_at as Timestamp).toDate();
           if (new Date() > expiryDate) {
             // Subscription has expired, revert to 'gratuit'
