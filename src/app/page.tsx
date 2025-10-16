@@ -63,6 +63,10 @@ const features = [
 ];
 
 function HomePageContent() {
+  const developerWhatsappNumber = "22654808048";
+  const whatsappMessage = encodeURIComponent("Bonjour, je vous contacte depuis la plateforme 'Gagne ton concours'.");
+  const developerWhatsappLink = `https://wa.me/${developerWhatsappNumber}?text=${whatsappMessage}`;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
        <style>
@@ -396,7 +400,7 @@ function HomePageContent() {
           
           <div className="text-center pt-8 border-t border-gray-800">
             <p className="text-gray-500 text-sm">
-              © 2025 Gagne ton concours. Développé par Abdoul Aziz. ✨
+              © 2025 Gagne ton concours. <Link href={developerWhatsappLink} target="_blank" rel="noopener noreferrer" className="underline hover:text-white">Contacter le développeur</Link>.
             </p>
           </div>
         </div>
