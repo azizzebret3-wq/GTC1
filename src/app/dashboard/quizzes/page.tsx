@@ -15,6 +15,7 @@ import {
   BrainCircuit,
   Sparkles,
   Shuffle,
+  WifiOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { getQuizzesFromFirestore, Quiz, QuizQuestion } from '@/lib/firestore.service';
+import { getAllLocalQuizzes } from '@/lib/localdb.service';
 import { generateQuiz, GenerateQuizOutput } from '@/ai/flows/generate-dynamic-quizzes';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -45,31 +47,59 @@ export default function QuizzesPage() {
     difficulty: 'all',
     access: 'all',
   });
+  const [isOffline, setIsOffline] = useState(false);
 
   const isPremium = userData?.subscription_type === 'premium';
   const isAdmin = userData?.role === 'admin';
   const canAccessPremium = isPremium || isAdmin;
+  
+  useEffect(() => {
+    const handleOnlineStatus = () => {
+      setIsOffline(!navigator.onLine);
+    };
+
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+    handleOnlineStatus();
+
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       setIsLoadingQuizzes(true);
       try {
-        const allQuizzes = await getQuizzesFromFirestore();
-        // Exclude mock exams from the general quiz list
+        let allQuizzes: Quiz[] = [];
+        if (isOffline) {
+          allQuizzes = await getAllLocalQuizzes();
+          if (allQuizzes.length === 0) {
+            toast({
+              title: "Mode hors ligne",
+              description: "Aucun quiz n'a été sauvegardé pour une consultation hors ligne.",
+              variant: 'default',
+            });
+          }
+        } else {
+          allQuizzes = await getQuizzesFromFirestore();
+        }
+        
         const regularQuizzes = allQuizzes.filter(q => !q.isMockExam);
         setQuizzes(regularQuizzes);
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Erreur de chargement',
-          description: 'Impossible de récupérer les quiz depuis la base de données.',
+          description: 'Impossible de récupérer les quiz.',
         });
       } finally {
         setIsLoadingQuizzes(false);
       }
     };
     fetchQuizzes();
-  }, [toast]);
+  }, [toast, isOffline]);
   
 
   const handleQuickPractice = () => {
@@ -148,7 +178,6 @@ export default function QuizzesPage() {
         </div>
       </div>
       
-      {/* Generators */}
        <Card className="w-full glassmorphism shadow-xl">
            <CardHeader>
             <div className="flex justify-between items-start">
@@ -171,11 +200,11 @@ export default function QuizzesPage() {
             <p className="text-muted-foreground md:max-w-xl">Lancez une session de 15 questions sur mesure pour un test approfondi de vos connaissances.</p>
              <Button
                 onClick={handleQuickPractice}
-                disabled={isLoadingQuizzes}
-                className={`w-full md:w-auto h-11 text-base font-bold text-white shadow-lg ${!canAccessPremium ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700'}`}
+                disabled={isLoadingQuizzes || isOffline}
+                className={`w-full md:w-auto h-11 text-base font-bold text-white shadow-lg ${!canAccessPremium || isOffline ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700'}`}
               >
-                {!canAccessPremium ? <Lock className="w-5 h-5 mr-3"/> : <Rocket className="w-5 h-5 mr-3"/>}
-                {canAccessPremium ? 'Démarrer une session' : 'Nécessite Premium'}
+                {!canAccessPremium ? <Lock className="w-5 h-5 mr-3"/> : isOffline ? <WifiOff className="w-5 h-5 mr-3"/> : <Rocket className="w-5 h-5 mr-3"/>}
+                {canAccessPremium ? (isOffline ? 'Indisponible hors ligne' : 'Démarrer une session') : 'Nécessite Premium'}
             </Button>
           </CardContent>
         </Card>
@@ -185,6 +214,9 @@ export default function QuizzesPage() {
         <CardHeader className="p-2 pt-0">
             <CardTitle>Bibliothèque de Quiz</CardTitle>
             <CardDescription>Parcourez nos quiz préparés par des experts.</CardDescription>
+             {isOffline && (
+                <p className="text-sm text-yellow-600 font-bold mt-2">Mode hors ligne activé — seuls les quiz déjà consultés sont disponibles.</p>
+            )}
         </CardHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="relative sm:col-span-2 lg:col-span-1">
@@ -231,7 +263,7 @@ export default function QuizzesPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredQuizzes.map((quiz) => {
-              const isLocked = quiz.access_type === 'premium' && !canAccessPremium;
+              const isLocked = quiz.access_type === 'premium' && !canAccessPremium && !isOffline;
               return (
                 <Card key={quiz.id} className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 flex flex-col">
                   <CardContent className="p-5 flex-grow">
@@ -298,7 +330,7 @@ export default function QuizzesPage() {
                     <ClipboardList className="w-10 h-10 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-600 mb-1">Aucun quiz trouvé</h3>
-                <p className="text-gray-500 text-sm">Essayez de modifier vos filtres.</p>
+                <p className="text-gray-500 text-sm">{isOffline ? "Veuillez vous connecter pour voir tous les quiz." : "Essayez de modifier vos filtres."}</p>
             </div>
           )}
         </>

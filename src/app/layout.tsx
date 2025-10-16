@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import React, { useEffect, useState } from 'react';
 import { AuthProvider } from '@/hooks/useAuth.tsx';
+import OfflineNotice from '@/components/OfflineNotice';
 
 const APP_NAME = "Gagne ton concours";
 const APP_DESCRIPTION = "La plateforme la plus moderne et interactive pour réussir tes concours directs et professionnels.";
@@ -52,6 +53,7 @@ export default function RootLayout({
                 enableSystem
                 disableTransitionOnChange
               >
+                <OfflineNotice />
                 {children}
                 <Toaster />
               </ThemeProvider>

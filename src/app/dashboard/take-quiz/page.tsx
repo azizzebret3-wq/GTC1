@@ -13,6 +13,7 @@ import { getQuizzesFromFirestore, Quiz, saveAttemptToFirestore } from '@/lib/fir
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth.tsx';
 import MathText from '@/components/math-text';
+import { saveQuizLocally, getQuizLocally } from '@/lib/localdb.service';
 
 type ActiveQuiz = Omit<Quiz, 'id'> & { id: string };
 
@@ -64,30 +65,27 @@ const RankingCard = ({ score, totalQuestions }: { score: number; totalQuestions:
   const [rank, setRank] = useState(0);
 
   useEffect(() => {
-    // Simuler un nombre de participants pour donner un contexte
-    const simulatedParticipants = Math.floor(Math.random() * 51) + 150; // Entre 150 et 200
+    const simulatedParticipants = Math.floor(Math.random() * 51) + 150;
     setTotalParticipants(simulatedParticipants);
 
-    // Normaliser le score sur une base de 50 pour la logique de classement
     const normalizedScore = (score / totalQuestions) * 50;
 
     let calculatedRank = 0;
     
-    // Fonction pour générer un nombre aléatoire dans une plage
     const randomInRange = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
     if (normalizedScore >= 50) {
-      calculatedRank = 1; // Premier
+      calculatedRank = 1;
     } else if (normalizedScore >= 45) {
-      calculatedRank = randomInRange(2, 5); // 2ème à 5ème
+      calculatedRank = randomInRange(2, 5);
     } else if (normalizedScore >= 40) {
-      calculatedRank = randomInRange(6, 15); // 6ème à 15ème
+      calculatedRank = randomInRange(6, 15);
     } else if (normalizedScore >= 30) {
-      calculatedRank = randomInRange(16, 40); // 16ème à 40ème
+      calculatedRank = randomInRange(16, 40);
     } else if (normalizedScore >= 20) {
-      calculatedRank = randomInRange(41, 75); // 41ème à 75ème
+      calculatedRank = randomInRange(41, 75);
     } else {
-      calculatedRank = randomInRange(76, simulatedParticipants); // Au-delà
+      calculatedRank = randomInRange(76, simulatedParticipants);
     }
 
     setRank(calculatedRank);
@@ -177,7 +175,6 @@ function TakeQuizComponent() {
     
     try {
       if (quizSource === 'generated' || quizSource === 'quick-practice') {
-          // Do not save attempt for dynamically generated quizzes as they have no persistent ID
         } else {
            await saveAttemptToFirestore({
               userId: user.uid,
@@ -202,20 +199,28 @@ function TakeQuizComponent() {
       setLoading(true);
       const quizIdParam = searchParams.get('id');
       const sourceParam = searchParams.get('source');
-
+      const isOffline = !navigator.onLine;
+  
       let loadedQuizData: Quiz | null = null;
-
+  
       try {
         if (sourceParam === 'generated' || sourceParam === 'quick-practice') {
           const quizDataString = sessionStorage.getItem('generatedQuiz');
           if (quizDataString) {
-            loadedQuizData = JSON.parse(quizDataString) as Quiz;
+            loadedQuizData = JSON.parse(quizDataString);
           }
         } else if (quizIdParam) {
-          const allQuizzes = await getQuizzesFromFirestore();
-          loadedQuizData = allQuizzes.find(q => q.id === quizIdParam) || null;
+          if (isOffline) {
+            loadedQuizData = await getQuizLocally(quizIdParam);
+          } else {
+            const allQuizzes = await getQuizzesFromFirestore();
+            loadedQuizData = allQuizzes.find(q => q.id === quizIdParam) || null;
+            if (loadedQuizData) {
+              await saveQuizLocally(loadedQuizData); // Cache the quiz for offline use
+            }
+          }
         }
-
+  
         if (loadedQuizData && loadedQuizData.questions && loadedQuizData.questions.length > 0) {
           const activeQuiz: ActiveQuiz = {
             id: loadedQuizData.id || `generated-${Date.now()}`,
@@ -223,7 +228,7 @@ function TakeQuizComponent() {
           };
           setQuiz(activeQuiz);
           setUserAnswers(Array(activeQuiz.questions.length).fill([]));
-          let duration = activeQuiz.duration_minutes || activeQuiz.questions.length; // 1 min per question fallback
+          let duration = activeQuiz.duration_minutes || activeQuiz.questions.length;
           setTimeLeft(duration * 60);
         } else {
           toast({ title: 'Erreur', description: 'Le quiz est invalide ou introuvable.', variant: 'destructive' });
@@ -237,7 +242,7 @@ function TakeQuizComponent() {
         setLoading(false);
       }
     };
-
+  
     loadQuiz();
   }, [router, toast, searchParams]);
   
@@ -270,14 +275,17 @@ function TakeQuizComponent() {
   const handleAnswerChange = (option: string, checked: boolean) => {
     setUserAnswers(prevAnswers => {
       const newAnswers = [...prevAnswers];
-      const currentAnswersForQuestion = newAnswers[currentQuestionIndex] || [];
+      let currentAnswersForQuestion = newAnswers[currentQuestionIndex] || [];
+      
       if (checked) {
-        newAnswers[currentQuestionIndex] = [...currentAnswersForQuestion, option];
+        currentAnswersForQuestion = [...currentAnswersForQuestion, option];
       } else {
-        newAnswers[currentQuestionIndex] = currentAnswersForQuestion.filter(
+        currentAnswersForQuestion = currentAnswersForQuestion.filter(
           (ans) => ans !== option
         );
       }
+      
+      newAnswers[currentQuestionIndex] = currentAnswersForQuestion;
       return newAnswers;
     });
   };
@@ -451,7 +459,6 @@ function TakeQuizComponent() {
 
 export default function TakeQuizPage() {
     return (
-        // Suspense boundary is required for useSearchParams to work
         <React.Suspense fallback={
             <div className="flex flex-col gap-4 justify-center items-center h-screen">
                 <Loader className="w-12 h-12 animate-spin text-purple-500" />

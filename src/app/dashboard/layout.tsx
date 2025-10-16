@@ -51,6 +51,7 @@ import {
 import { AppNotification, getUserNotifications, markAllNotificationsAsRead } from '@/lib/firestore.service';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import OfflineNotice from '@/components/OfflineNotice';
 
 const userNavItems = [
   { title: "Accueil", url: "/dashboard", icon: Activity, gradient: "from-purple-500 to-pink-500" },
@@ -195,6 +196,7 @@ export default function DashboardLayout({
 
   return (
      <div className="min-h-screen bg-background">
+       <OfflineNotice />
       <style>
         {`
           .glassmorphism {
