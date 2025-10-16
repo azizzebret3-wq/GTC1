@@ -396,7 +396,12 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
     const isMockExam = watch("isMockExam");
     
     const handleAddQuestion = () => {
-        appendQuestion({ question: '', options: [{ value: '' }, { value: '' }], correctAnswers: [], explanation: '' });
+        appendQuestion({
+            question: '',
+            options: [{ value: '' }, { value: '' }, { value: '' }, { value: '' }],
+            correctAnswers: [],
+            explanation: ''
+        });
     }
     
     return (
