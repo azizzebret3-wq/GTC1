@@ -138,7 +138,7 @@ export default function QuizzesCategoryPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {categories.map((category) => {
               const categoryData = quizzesByCategory[category];
               const visuals = categoryVisuals[category] || categoryVisuals.default;
