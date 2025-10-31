@@ -2,66 +2,46 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth.tsx';
-import { 
-  ClipboardList, 
-  Search, 
-  Crown,
-  Lock,
-  Rocket,
-  Loader,
-  BrainCircuit,
-  Sparkles,
-  Shuffle,
-  WifiOff
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { getQuizzesFromFirestore, Quiz, QuizQuestion } from '@/lib/firestore.service';
+import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
 import { getAllLocalQuizzes } from '@/lib/localdb.service';
-import { generateQuiz, GenerateQuizOutput } from '@/ai/flows/generate-dynamic-quizzes';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe } from 'lucide-react';
+import * as LucideIcons from "lucide-react";
 
-export default function QuizzesPage() {
-  const { userData } = useAuth();
+type IconName = keyof typeof LucideIcons;
+
+const categoryVisuals: { [key: string]: { icon: IconName; gradient: string } } = {
+  'Mathématiques': { icon: 'Calculator', gradient: 'from-blue-500 to-cyan-500' },
+  'SVT': { icon: 'TestTube2', gradient: 'from-green-500 to-emerald-500' },
+  'Français': { icon: 'Languages', gradient: 'from-orange-500 to-amber-500' },
+  'Culture Générale': { icon: 'Globe', gradient: 'from-indigo-500 to-purple-600' },
+  'Histoire-Géographie': { icon: 'Book', gradient: 'from-rose-500 to-pink-500' },
+  'default': { icon: 'Book', gradient: 'from-gray-500 to-gray-600' }
+};
+
+const Icon = ({ name, ...props }: { name: IconName } & LucideIcons.LucideProps) => {
+  const LucideIcon = LucideIcons[name] as React.ComponentType<LucideIcons.LucideProps>;
+  if (!LucideIcon) return <Book {...props} />; // Fallback icon
+  return <LucideIcon {...props} />;
+};
+
+
+export default function QuizzesCategoryPage() {
   const router = useRouter();
   const { toast } = useToast();
   
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-    category: 'all',
-    difficulty: 'all',
-    access: 'all',
-  });
   const [isOffline, setIsOffline] = useState(false);
 
-  const isPremium = userData?.subscription_type === 'premium';
-  const isAdmin = userData?.role === 'admin';
-  const canAccessPremium = isPremium || isAdmin;
-  
   useEffect(() => {
-    const handleOnlineStatus = () => {
-      setIsOffline(!navigator.onLine);
-    };
-
+    const handleOnlineStatus = () => setIsOffline(!navigator.onLine);
     window.addEventListener('online', handleOnlineStatus);
     window.addEventListener('offline', handleOnlineStatus);
     handleOnlineStatus();
-
     return () => {
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOnlineStatus);
@@ -100,63 +80,17 @@ export default function QuizzesPage() {
     };
     fetchQuizzes();
   }, [toast, isOffline]);
-  
 
-  const handleQuickPractice = () => {
-    if (!canAccessPremium) {
-      router.push('/dashboard/premium');
-      return;
+  const quizzesByCategory = quizzes.reduce((acc, quiz) => {
+    const category = quiz.category || 'Non classé';
+    if (!acc[category]) {
+      acc[category] = [];
     }
+    acc[category].push(quiz);
+    return acc;
+  }, {} as Record<string, Quiz[]>);
 
-    const availableQuestions = quizzes
-      .flatMap(q => q.questions);
-
-    if (availableQuestions.length < 15) {
-      toast({
-        title: 'Pas assez de questions',
-        description: 'Il n\'y a pas assez de questions dans la banque pour créer un entraînement.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const shuffled = availableQuestions.sort(() => 0.5 - Math.random());
-    const selectedQuestions = shuffled.slice(0, 15);
-
-    const quickQuiz: Quiz = {
-      title: "Entraînement Rapide",
-      description: "Une session de questions sur mesure pour tester vos connaissances.",
-      category: "Mixte",
-      difficulty: "moyen",
-      access_type: "premium",
-      duration_minutes: 15,
-      total_questions: selectedQuestions.length,
-      questions: selectedQuestions,
-      createdAt: new Date(),
-    };
-    
-    sessionStorage.setItem('generatedQuiz', JSON.stringify(quickQuiz));
-    router.push('/dashboard/take-quiz?source=quick-practice');
-  };
-
-
-  const handleFilterChange = (type: string, value: string) => {
-    setFilters(prev => ({ ...prev, [type]: value }));
-  };
-
-  const filteredQuizzes = quizzes.filter(quiz => {
-    return (
-      quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filters.category === 'all' || quiz.category === filters.category) &&
-      (filters.difficulty === 'all' || quiz.difficulty === filters.difficulty) &&
-      (filters.access === 'all' || quiz.access_type === filters.access)
-    );
-  });
-  
-  const categories = ['all', ...Array.from(new Set(quizzes.map(q => q.category)))];
-  const difficulties = ['all', 'facile', 'moyen', 'difficile'];
-  const accessTypes = ['all', 'gratuit', 'premium'];
-
+  const categories = Object.keys(quizzesByCategory);
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -168,92 +102,27 @@ export default function QuizzesPage() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black gradient-text">
-                Quiz & Entraînement
+                Catégories de Quiz
               </h1>
               <p className="text-sm sm:text-base text-gray-600 font-medium">
-                Mettez-vous au défi et entraînez-vous à la demande.
+                Choisissez une matière pour commencer votre entraînement.
               </p>
             </div>
           </div>
         </div>
       </div>
       
-       <Card className="w-full glassmorphism shadow-xl">
-           <CardHeader>
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-green-500 rounded-lg flex items-center justify-center shadow-md">
-                    <Shuffle className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                    <CardTitle className="gradient-text font-black">Entraînement Rapide</CardTitle>
-                    <CardDescription className="font-semibold">Questions sur mesure, révision express.</CardDescription>
-                </div>
-              </div>
-              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs">
-                <Crown className="w-3 h-3 mr-1" />
-                Premium
-              </Badge>
+       {isOffline && (
+        <Card className="bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800 p-4">
+          <div className="flex items-center gap-3">
+            <WifiOff className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            <div>
+              <h3 className="font-bold text-yellow-800 dark:text-yellow-300">Mode hors ligne activé</h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">Seuls les quiz déjà consultés sont disponibles.</p>
             </div>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4">
-            <p className="text-muted-foreground md:max-w-xl">Lancez une session de 15 questions sur mesure pour un test approfondi de vos connaissances.</p>
-             <Button
-                onClick={handleQuickPractice}
-                disabled={isLoadingQuizzes || isOffline}
-                className={`w-full md:w-auto h-11 text-base font-bold text-white shadow-lg ${!canAccessPremium || isOffline ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-teal-500 to-green-600 hover:from-teal-600 hover:to-green-700'}`}
-              >
-                {!canAccessPremium ? <Lock className="w-5 h-5 mr-3"/> : isOffline ? <WifiOff className="w-5 h-5 mr-3"/> : <Rocket className="w-5 h-5 mr-3"/>}
-                {canAccessPremium ? (isOffline ? 'Indisponible hors ligne' : 'Démarrer une session') : 'Nécessite Premium'}
-            </Button>
-          </CardContent>
-        </Card>
-
-
-      <Card className="glassmorphism shadow-xl p-4">
-        <CardHeader className="p-2 pt-0">
-            <CardTitle>Bibliothèque de Quiz</CardTitle>
-            <CardDescription>Parcourez nos quiz préparés par des experts.</CardDescription>
-             {isOffline && (
-                <p className="text-sm text-yellow-600 font-bold mt-2">Mode hors ligne activé — seuls les quiz déjà consultés sont disponibles.</p>
-            )}
-        </CardHeader>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="relative sm:col-span-2 lg:col-span-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Rechercher un quiz..."
-              className="pl-9 h-10 rounded-lg text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
           </div>
-          <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
-            <SelectTrigger className="h-10 rounded-lg text-sm">
-              <SelectValue placeholder="Catégorie" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map(cat => <SelectItem key={cat} value={cat} className="text-sm">{cat === 'all' ? 'Toutes les catégories' : cat}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={filters.difficulty} onValueChange={(value) => handleFilterChange('difficulty', value)}>
-            <SelectTrigger className="h-10 rounded-lg text-sm">
-              <SelectValue placeholder="Difficulté" />
-            </SelectTrigger>
-            <SelectContent>
-              {difficulties.map(diff => <SelectItem key={diff} value={diff} className="text-sm">{diff === 'all' ? 'Toutes les difficultés' : diff.charAt(0).toUpperCase() + diff.slice(1)}</SelectItem>)}
-            </SelectContent>
-          </Select>
-           <Select value={filters.access} onValueChange={(value) => handleFilterChange('access', value)}>
-            <SelectTrigger className="h-10 rounded-lg text-sm">
-              <SelectValue placeholder="Accès" />
-            </SelectTrigger>
-            <SelectContent>
-               {accessTypes.map(acc => <SelectItem key={acc} value={acc} className="text-sm">{acc === 'all' ? 'Tous les accès' : acc.charAt(0).toUpperCase() + acc.slice(1)}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {isLoadingQuizzes ? (
         <div className="flex justify-center items-center h-64">
@@ -262,75 +131,41 @@ export default function QuizzesPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredQuizzes.map((quiz) => {
-              const isLocked = quiz.access_type === 'premium' && !canAccessPremium && !isOffline;
+            {categories.map((category) => {
+              const categoryData = quizzesByCategory[category];
+              const visuals = categoryVisuals[category] || categoryVisuals.default;
+
               return (
-                <Card key={quiz.id} className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 flex flex-col">
-                  <CardContent className="p-5 flex-grow">
-                    <div className="flex justify-between items-start">
-                      <Badge variant="outline" className={`text-xs font-semibold capitalize ${
-                        quiz.difficulty === 'facile' ? 'border-green-300 text-green-700' :
-                        quiz.difficulty === 'moyen' ? 'border-yellow-300 text-yellow-700' :
-                        'border-red-300 text-red-700'
-                      }`}>
-                        {quiz.difficulty}
-                      </Badge>
-                      {quiz.access_type === 'premium' && (
-                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs">
-                          <Crown className="w-3 h-3 mr-1" />
-                          Premium
+                <Card 
+                  key={category} 
+                  className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 cursor-pointer"
+                  onClick={() => router.push(`/dashboard/quizzes/${encodeURIComponent(category)}`)}
+                >
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-r ${visuals.gradient} group-hover:scale-110 transition-transform`}>
+                                <Icon name={visuals.icon} className="w-6 h-6 text-white" />
+                            </div>
+                             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                         <h3 className="text-xl font-bold text-foreground mt-4 group-hover:text-purple-600 transition-colors">
+                            {category}
+                        </h3>
+                         <Badge variant="secondary" className="mt-2 font-semibold">
+                            {categoryData.length} quiz
                         </Badge>
-                      )}
-                    </div>
-                    <h3 className="text-base font-bold text-gray-900 mt-3 mb-2 group-hover:text-purple-600 transition-colors">
-                      {quiz.title}
-                    </h3>
-                    <p className="text-xs text-gray-500 font-medium mb-3">
-                      {quiz.category}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-600 font-medium border-t border-gray-200 pt-3">
-                      <span>{quiz.total_questions} questions</span>
-                      <span>{quiz.duration_minutes} min</span>
-                    </div>
-                  </CardContent>
-                  <Button 
-                    className={`w-full font-bold text-white rounded-t-none h-12 text-sm ${
-                      isLocked 
-                        ? 'bg-gradient-to-r from-gray-400 to-gray-500'
-                        : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'
-                    }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (isLocked) {
-                        router.push('/dashboard/premium');
-                      } else {
-                        router.push(`/dashboard/take-quiz?id=${quiz.id}`);
-                      }
-                    }}
-                  >
-                      {isLocked ? (
-                        <>
-                          <Lock className="w-4 h-4 mr-2" />
-                          Premium
-                        </>
-                      ) : (
-                        <>
-                          <Rocket className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-                          Commencer
-                        </>
-                      )}
-                  </Button>
+                    </CardContent>
                 </Card>
               );
             })}
           </div>
-          {filteredQuizzes.length === 0 && (
+          {categories.length === 0 && (
             <div className="text-center py-10 col-span-full">
                 <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                     <ClipboardList className="w-10 h-10 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-600 mb-1">Aucun quiz trouvé</h3>
-                <p className="text-gray-500 text-sm">{isOffline ? "Veuillez vous connecter pour voir tous les quiz." : "Essayez de modifier vos filtres."}</p>
+                <p className="text-gray-500 text-sm">{isOffline ? "Veuillez vous connecter pour voir tous les quiz." : "De nouveaux quiz seront bientôt ajoutés."}</p>
             </div>
           )}
         </>
