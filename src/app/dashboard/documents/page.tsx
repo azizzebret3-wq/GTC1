@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth.tsx';
 import { 
   BookOpen, 
@@ -28,6 +27,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { LibraryDocument, getDocumentsFromFirestore } from '@/lib/firestore.service';
 import { useRouter } from 'next/navigation';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function DocumentsPage() {
   const { userData } = useAuth();
@@ -77,7 +77,6 @@ export default function DocumentsPage() {
   const isAdmin = userData?.role === 'admin';
   
   const categories = ['all', ...Array.from(new Set(documents.map(d => d.category)))];
-  const types = ['all', 'pdf', 'video'];
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -99,9 +98,9 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      <Card className="glassmorphism shadow-xl p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div className="relative sm:col-span-2 lg:col-span-1">
+      <Card className="glassmorphism shadow-xl p-4 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="relative md:col-span-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Rechercher une ressource..."
@@ -118,15 +117,14 @@ export default function DocumentsPage() {
               {categories.map(cat => <SelectItem key={cat} value={cat} className="text-sm">{cat === 'all' ? 'Toutes les catégories' : cat}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={filters.type} onValueChange={(value) => handleFilterChange('type', value)}>
-            <SelectTrigger className="h-10 rounded-lg text-sm">
-              <SelectValue placeholder="Type de média" />
-            </SelectTrigger>
-            <SelectContent>
-               {types.map(type => <SelectItem key={type} value={type} className="text-sm">{type === 'all' ? 'Tous les types' : type.toUpperCase()}</SelectItem>)}
-            </SelectContent>
-          </Select>
         </div>
+         <Tabs defaultValue="all" onValueChange={(value) => handleFilterChange('type', value)}>
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">Tous</TabsTrigger>
+                <TabsTrigger value="pdf">PDFs</TabsTrigger>
+                <TabsTrigger value="video">Vidéos</TabsTrigger>
+            </TabsList>
+        </Tabs>
       </Card>
       
       {isLoading ? (
