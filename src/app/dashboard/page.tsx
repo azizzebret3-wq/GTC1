@@ -111,7 +111,7 @@ export default function Dashboard() {
 
     const availableQuestions = quizzes.flatMap(q => q.questions);
 
-    if (availableQuestions.length < 15) {
+    if (availableQuestions.length < 20) {
       toast({
         title: 'Pas assez de questions',
         description: 'Il n\'y a pas assez de questions dans la banque pour créer un entraînement.',
@@ -121,7 +121,7 @@ export default function Dashboard() {
     }
 
     const shuffled = availableQuestions.sort(() => 0.5 - Math.random());
-    const selectedQuestions = shuffled.slice(0, 15);
+    const selectedQuestions = shuffled.slice(0, 20);
 
     const quickQuiz: Quiz = {
       title: "Entraînement Rapide",
@@ -129,7 +129,7 @@ export default function Dashboard() {
       category: "Mixte",
       difficulty: "moyen",
       access_type: "premium",
-      duration_minutes: 15,
+      duration_minutes: 20,
       total_questions: selectedQuestions.length,
       questions: selectedQuestions,
       createdAt: new Date(),
