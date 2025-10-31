@@ -8,7 +8,7 @@ import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
 import { getAllLocalQuizzes } from '@/lib/localdb.service';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe } from 'lucide-react';
+import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe, Scale, Landmark, Brain, Atom, History, Map, FileQuestion, GraduationCap } from 'lucide-react';
 import * as LucideIcons from "lucide-react";
 
 type IconName = keyof typeof LucideIcons;
@@ -18,7 +18,15 @@ const categoryVisuals: { [key: string]: { icon: IconName; gradient: string } } =
   'SVT': { icon: 'TestTube2', gradient: 'from-green-500 to-emerald-500' },
   'Français': { icon: 'Languages', gradient: 'from-orange-500 to-amber-500' },
   'Culture Générale': { icon: 'Globe', gradient: 'from-indigo-500 to-purple-600' },
-  'Histoire-Géographie': { icon: 'Book', gradient: 'from-rose-500 to-pink-500' },
+  'Histoire': { icon: 'History', gradient: 'from-amber-600 to-yellow-700' },
+  'Géographie': { icon: 'Map', gradient: 'from-teal-500 to-cyan-600' },
+  'Tests Psychotechniques': { icon: 'Brain', gradient: 'from-rose-400 to-pink-500' },
+  'Physique-Chimie': { icon: 'Atom', gradient: 'from-sky-500 to-blue-600' },
+  'Philosophie': { icon: 'GraduationCap', gradient: 'from-purple-600 to-indigo-700' },
+  'Droit': { icon: 'Scale', gradient: 'from-gray-600 to-slate-700' },
+  'Économie': { icon: 'Landmark', gradient: 'from-lime-500 to-green-600' },
+  'Concours Passés': { icon: 'FileQuestion', gradient: 'from-stone-500 to-neutral-600' },
+  'Accompagnement Final': { icon: 'CheckCheck', gradient: 'from-yellow-400 to-orange-500' },
   'default': { icon: 'Book', gradient: 'from-gray-500 to-gray-600' }
 };
 
@@ -130,7 +138,7 @@ export default function QuizzesCategoryPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {categories.map((category) => {
               const categoryData = quizzesByCategory[category];
               const visuals = categoryVisuals[category] || categoryVisuals.default;

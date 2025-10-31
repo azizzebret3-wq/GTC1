@@ -76,6 +76,22 @@ const quizFormSchema = z.object({
 
 type QuizFormData = z.infer<typeof quizFormSchema>;
 
+const officialCategories = [
+    'Culture Générale',
+    'Mathématiques',
+    'SVT',
+    'Physique-Chimie',
+    'Français',
+    'Philosophie',
+    'Histoire',
+    'Géographie',
+    'Droit',
+    'Économie',
+    'Tests Psychotechniques',
+    'Concours Passés',
+    'Accompagnement Final'
+];
+
 const formatDateForInput = (date?: Date): string => {
     if (!date) return '';
     try {
@@ -419,9 +435,16 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
                     <Input {...register("description")} id="description" />
                     {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
                 </div>
-                <div className="space-y-1.5">
-                    <Label htmlFor="category">Catégorie *</Label>
-                    <Input {...register("category")} id="category"/>
+                 <div className="space-y-1.5">
+                    <Label>Catégorie *</Label>
+                    <Controller name="category" control={control} render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger><SelectValue placeholder="Choisir une catégorie..."/></SelectTrigger>
+                            <SelectContent>
+                                {officialCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    )}/>
                     {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category.message}</p>}
                 </div>
                 <div className="space-y-1.5">
