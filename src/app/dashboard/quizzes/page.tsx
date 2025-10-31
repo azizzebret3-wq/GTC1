@@ -8,7 +8,7 @@ import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
 import { getAllLocalQuizzes } from '@/lib/localdb.service';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe, Scale, Landmark, Brain, Atom, History, Map, FileQuestion, GraduationCap } from 'lucide-react';
+import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe, Scale, Landmark, Brain, Atom, History, Map, FileQuestion, GraduationCap, CheckCheck } from 'lucide-react';
 import * as LucideIcons from "lucide-react";
 
 type IconName = keyof typeof LucideIcons;
