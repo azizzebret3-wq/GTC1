@@ -8,12 +8,13 @@ import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
 import { getAllLocalQuizzes } from '@/lib/localdb.service';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe, Scale, Landmark, Brain, Atom, History, Map, FileQuestion, GraduationCap, CheckCheck } from 'lucide-react';
+import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe, Scale, Landmark, Brain, Atom, History, Map, FileQuestion, GraduationCap, CheckCheck, Newspaper } from 'lucide-react';
 import * as LucideIcons from "lucide-react";
 
 type IconName = keyof typeof LucideIcons;
 
 const categoryVisuals: { [key: string]: { icon: IconName; gradient: string } } = {
+  'Actualités': { icon: 'Newspaper', gradient: 'from-slate-500 to-gray-600'},
   'Mathématiques': { icon: 'Calculator', gradient: 'from-blue-500 to-cyan-500' },
   'SVT': { icon: 'TestTube2', gradient: 'from-green-500 to-emerald-500' },
   'Français': { icon: 'Languages', gradient: 'from-orange-500 to-amber-500' },

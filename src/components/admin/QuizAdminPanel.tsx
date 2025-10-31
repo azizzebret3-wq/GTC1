@@ -77,6 +77,7 @@ const quizFormSchema = z.object({
 type QuizFormData = z.infer<typeof quizFormSchema>;
 
 const officialCategories = [
+    'Actualités',
     'Culture Générale',
     'Mathématiques',
     'SVT',
