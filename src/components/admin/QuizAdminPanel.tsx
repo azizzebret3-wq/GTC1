@@ -442,7 +442,7 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
                     <Controller name="category" control={control} render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value}>
                             <SelectTrigger><SelectValue placeholder="Choisir une catégorie..."/></SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-60 overflow-y-auto">
                                 {officialCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                             </SelectContent>
                         </Select>
