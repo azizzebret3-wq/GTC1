@@ -28,6 +28,7 @@ const categoryVisuals: { [key: string]: { icon: IconName; gradient: string } } =
   'Économie': { icon: 'Landmark', gradient: 'from-lime-500 to-green-600' },
   'Concours Passés': { icon: 'FileQuestion', gradient: 'from-stone-500 to-neutral-600' },
   'Accompagnement Final': { icon: 'CheckCheck', gradient: 'from-yellow-400 to-orange-500' },
+  'Mixte': { icon: 'BrainCircuit', gradient: 'from-fuchsia-500 to-purple-600' },
   'default': { icon: 'Book', gradient: 'from-gray-500 to-gray-600' }
 };
 

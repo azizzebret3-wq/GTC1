@@ -90,7 +90,8 @@ const officialCategories = [
     'Économie',
     'Tests Psychotechniques',
     'Concours Passés',
-    'Accompagnement Final'
+    'Accompagnement Final',
+    'Mixte'
 ];
 
 const formatDateForInput = (date?: Date): string => {
