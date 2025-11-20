@@ -7,7 +7,7 @@ import { useForm, useFieldArray, Controller, FormProvider, useFormContext } from
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, Shuffle
+  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, X, Sparkles, Shuffle, FileJson
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -23,7 +23,6 @@ import {
   NewQuizData,
   QuizQuestion,
 } from '@/lib/firestore.service';
-import { generateQuiz, GenerateQuizOutput } from '@/ai/flows/generate-dynamic-quizzes';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,6 +71,21 @@ const quizFormSchema = z.object({
 }).refine(data => !data.isMockExam || !!data.scheduledFor, {
   message: "Un concours blanc doit avoir une date de programmation.",
   path: ["scheduledFor"],
+});
+
+// Zod schema for validating the pasted JSON
+const jsonQuizSchema = z.object({
+    title: z.string(),
+    description: z.string(),
+    category: z.string(),
+    difficulty: z.enum(['facile', 'moyen', 'difficile']),
+    duration_minutes: z.number(),
+    questions: z.array(z.object({
+        question: z.string(),
+        options: z.array(z.string()),
+        correctAnswers: z.array(z.string()),
+        explanation: z.string().optional(),
+    }))
 });
 
 type QuizFormData = z.infer<typeof quizFormSchema>;
@@ -142,72 +156,39 @@ const MathToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
 };
 
 
-function AiGeneratorDialog({ open, onOpenChange, onGenerate, isGenerating }: { open: boolean, onOpenChange: (open: boolean) => void, onGenerate: (topic: string, numQuestions: number, difficulty: 'facile' | 'moyen' | 'difficile') => void, isGenerating: boolean }) {
-    const [topic, setTopic] = useState('');
-    const [numQuestions, setNumQuestions] = useState('10');
-    const [difficulty, setDifficulty] = useState<'facile' | 'moyen' | 'difficile'>('moyen');
+function JsonImportDialog({ open, onOpenChange, onImport }: { open: boolean, onOpenChange: (open: boolean) => void, onImport: (jsonString: string) => void }) {
+    const [jsonString, setJsonString] = useState('');
 
-    const handleGenerate = () => {
-        if (!topic) return;
-        onGenerate(topic, parseInt(numQuestions), difficulty);
-    }
+    const handleImportClick = () => {
+        onImport(jsonString);
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-xl">
                 <DialogHeader>
-                    <DialogTitle>Générer un Quiz avec l'IA</DialogTitle>
+                    <DialogTitle>Importer un Quiz depuis JSON</DialogTitle>
                     <DialogDescription>
-                        Entrez un sujet, le nombre de questions et la difficulté.
+                        Collez le contenu JSON de votre quiz ci-dessous. Assurez-vous que le format est correct.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="ai-topic">Sujet du Quiz</Label>
-                        <Input 
-                            id="ai-topic"
-                            value={topic}
-                            onChange={(e) => setTopic(e.target.value)}
-                            placeholder="Ex: La révolution de 1983 au Burkina Faso"
-                            disabled={isGenerating}
+                        <Label htmlFor="json-input">Contenu JSON du Quiz</Label>
+                        <Textarea 
+                            id="json-input"
+                            value={jsonString}
+                            onChange={(e) => setJsonString(e.target.value)}
+                            placeholder='{ "title": "...", "questions": [...] }'
+                            rows={15}
                         />
-                    </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="ai-num-questions">Nombre de questions</Label>
-                             <Select value={numQuestions} onValueChange={setNumQuestions} disabled={isGenerating}>
-                                <SelectTrigger id="ai-num-questions">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="10">10 Questions</SelectItem>
-                                    <SelectItem value="20">20 Questions</SelectItem>
-                                    <SelectItem value="30">30 Questions</SelectItem>
-                                    <SelectItem value="40">40 Questions</SelectItem>
-                                    <SelectItem value="50">50 Questions</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="ai-difficulty">Difficulté</Label>
-                            <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)} disabled={isGenerating}>
-                                <SelectTrigger id="ai-difficulty">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="facile">Facile</SelectItem>
-                                    <SelectItem value="moyen">Moyen</SelectItem>
-                                    <SelectItem value="difficile">Difficile</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isGenerating}>Annuler</Button>
-                    <Button onClick={handleGenerate} disabled={isGenerating || !topic}>
-                        {isGenerating ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                        {isGenerating ? 'Génération...' : 'Générer'}
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+                    <Button onClick={handleImportClick}>
+                        <FileJson className="w-4 h-4 mr-2" />
+                        Valider et Importer
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -408,7 +389,7 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
     )
 }
 
-const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleOpenShuffleDialog }: { onFormSubmit: (data: QuizFormData) => void, handleCloseDialog: () => void, handleOpenAiDialog: () => void, handleOpenShuffleDialog: () => void }) => {
+const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenJsonImportDialog, handleOpenShuffleDialog }: { onFormSubmit: (data: QuizFormData) => void, handleCloseDialog: () => void, handleOpenJsonImportDialog: () => void, handleOpenShuffleDialog: () => void }) => {
     const { control, register, handleSubmit, watch, formState: { errors, isSubmitting } } = useFormContext<QuizFormData>();
     const { fields: questions, append: appendQuestion, remove: removeQuestion } = useFieldArray({ control, name: "questions" });
     const isMockExam = watch("isMockExam");
@@ -496,8 +477,8 @@ const QuizForm = ({ onFormSubmit, handleCloseDialog, handleOpenAiDialog, handleO
                             <Button type="button" variant="outline" size="sm" onClick={handleOpenShuffleDialog}>
                                 <Shuffle className="w-4 h-4 mr-2"/> Sur Mesure
                             </Button>
-                            <Button type="button" variant="outline" size="sm" onClick={handleOpenAiDialog}>
-                                <BrainCircuit className="w-4 h-4 mr-2"/> Générer (IA)
+                            <Button type="button" variant="outline" size="sm" onClick={handleOpenJsonImportDialog}>
+                                <FileJson className="w-4 h-4 mr-2"/> Importer JSON
                             </Button>
                             <Button type="button" size="sm" onClick={handleAddQuestion}>
                                 <PlusCircle className="w-4 h-4 mr-2"/> Ajouter
@@ -536,7 +517,7 @@ export default function QuizAdminPanel() {
   const [allQuestions, setAllQuestions] = useState<QuizQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isQuizFormOpen, setIsQuizFormOpen] = useState(false);
-  const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
+  const [isJsonImportOpen, setIsJsonImportOpen] = useState(false);
   const [isShuffleOpen, setIsShuffleOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
@@ -674,35 +655,38 @@ export default function QuizAdminPanel() {
     }
   };
 
-  const handleGenerateQuiz = async (topic: string, numQuestions: number, difficulty: 'facile' | 'moyen' | 'difficile') => {
-    setIsGenerating(true);
-    try {
-      const result: GenerateQuizOutput = await generateQuiz({ topic, numberOfQuestions: numQuestions, difficulty });
-      const { quiz } = result;
+  const handleJsonImport = (jsonString: string) => {
+      try {
+          const parsed = JSON.parse(jsonString);
+          const validatedQuiz = jsonQuizSchema.parse(parsed);
 
-      formMethods.reset({
-        ...formMethods.getValues(),
-        title: quiz.title,
-        description: quiz.description,
-        category: quiz.category,
-        difficulty: quiz.difficulty,
-        duration_minutes: quiz.duration_minutes,
-        questions: (quiz.questions || []).map(q => ({
-            question: q.question,
-            options: q.options.map(opt => ({ value: opt })),
-            correctAnswers: q.correctAnswers,
-            explanation: q.explanation || '',
-        })),
-      });
-      
-      toast({ title: "Quiz généré !", description: `Un quiz sur "${topic}" a été créé. Veuillez le vérifier avant de l'enregistrer.`});
-      setIsAiGeneratorOpen(false);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Erreur de génération', description: "L'IA n'a pas pu générer le quiz." });
-    } finally {
-      setIsGenerating(false);
-    }
+          formMethods.reset({
+              ...formMethods.getValues(),
+              title: validatedQuiz.title,
+              description: validatedQuiz.description,
+              category: validatedQuiz.category,
+              difficulty: validatedQuiz.difficulty,
+              duration_minutes: validatedQuiz.duration_minutes,
+              questions: validatedQuiz.questions.map(q => ({
+                  question: q.question,
+                  options: q.options.map(opt => ({ value: opt })),
+                  correctAnswers: q.correctAnswers,
+                  explanation: q.explanation || '',
+              })),
+          });
+
+          toast({ title: "Importation réussie", description: "Le formulaire a été rempli avec les données du JSON." });
+          setIsJsonImportOpen(false);
+      } catch (error) {
+          console.error("JSON import error:", error);
+          if (error instanceof z.ZodError) {
+              toast({ variant: 'destructive', title: 'Erreur de format JSON', description: `Le JSON ne respecte pas le format attendu. Détails: ${error.errors.map(e => `${e.path.join('.')} - ${e.message}`).join(', ')}` });
+          } else {
+              toast({ variant: 'destructive', title: 'Erreur d\'importation', description: 'Le JSON est invalide ou ne peut pas être lu.' });
+          }
+      }
   };
+
 
   const handleShuffleFromBank = (numQuestions: number, categories: string[], difficulties: string[]) => {
       setIsGenerating(true);
@@ -827,14 +811,14 @@ export default function QuizAdminPanel() {
             <QuizForm 
                 onFormSubmit={onFormSubmit}
                 handleCloseDialog={handleCloseDialog}
-                handleOpenAiDialog={() => setIsAiGeneratorOpen(true)}
+                handleOpenJsonImportDialog={() => setIsJsonImportOpen(true)}
                 handleOpenShuffleDialog={() => setIsShuffleOpen(true)}
             />
           </FormProvider>
         </DialogContent>
       </Dialog>
     </div>
-    <AiGeneratorDialog open={isAiGeneratorOpen} onOpenChange={setIsAiGeneratorOpen} onGenerate={handleGenerateQuiz} isGenerating={isGenerating} />
+    <JsonImportDialog open={isJsonImportOpen} onOpenChange={setIsJsonImportOpen} onImport={handleJsonImport} />
     <ShuffleDialog open={isShuffleOpen} onOpenChange={setIsShuffleOpen} onGenerate={handleShuffleFromBank} isGenerating={isGenerating} allQuestions={allQuestions} />
     </>
   );
