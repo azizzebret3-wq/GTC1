@@ -73,20 +73,22 @@ const quizFormSchema = z.object({
   path: ["scheduledFor"],
 });
 
-// Zod schema for validating the pasted JSON
 const jsonQuizSchema = z.object({
-    title: z.string(),
-    description: z.string(),
-    category: z.string(),
-    difficulty: z.enum(['facile', 'moyen', 'difficile']),
-    duration_minutes: z.number(),
-    questions: z.array(z.object({
-        question: z.string(),
-        options: z.array(z.string()),
-        correctAnswers: z.array(z.string()),
-        explanation: z.string().optional(),
-    }))
+  title: z.string().optional(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  difficulty: z.enum(['facile', 'moyen', 'difficile']).optional(),
+  duration_minutes: z.number().optional(),
+  questions: z.array(
+    z.object({
+      question: z.string(),
+      options: z.array(z.string()),
+      correctAnswers: z.array(z.string()),
+      explanation: z.string().optional().nullable(),
+    })
+  ).optional(),
 });
+
 
 type QuizFormData = z.infer<typeof quizFormSchema>;
 
@@ -662,12 +664,12 @@ export default function QuizAdminPanel() {
 
           formMethods.reset({
               ...formMethods.getValues(),
-              title: validatedQuiz.title,
-              description: validatedQuiz.description,
-              category: validatedQuiz.category,
-              difficulty: validatedQuiz.difficulty,
-              duration_minutes: validatedQuiz.duration_minutes,
-              questions: validatedQuiz.questions.map(q => ({
+              title: validatedQuiz.title || '',
+              description: validatedQuiz.description || '',
+              category: validatedQuiz.category || '',
+              difficulty: validatedQuiz.difficulty || 'moyen',
+              duration_minutes: validatedQuiz.duration_minutes || 15,
+              questions: (validatedQuiz.questions || []).map(q => ({
                   question: q.question,
                   options: q.options.map(opt => ({ value: opt })),
                   correctAnswers: q.correctAnswers,
