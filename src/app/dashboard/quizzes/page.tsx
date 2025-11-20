@@ -151,19 +151,21 @@ export default function QuizzesCategoryPage() {
                   className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 cursor-pointer"
                   onClick={() => router.push(`/dashboard/quizzes/${encodeURIComponent(category)}`)}
                 >
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-r ${visuals.gradient} group-hover:scale-110 transition-transform`}>
-                                <Icon name={visuals.icon} className="w-6 h-6 text-white" />
-                            </div>
-                             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                         <h3 className="text-xl font-bold text-foreground mt-4 group-hover:text-purple-600 transition-colors">
-                            {category}
-                        </h3>
-                         <Badge variant="secondary" className="mt-2 font-semibold">
-                            {categoryData.length} quiz
-                        </Badge>
+                    <CardContent className="p-6 flex flex-col justify-between h-full">
+                       <div>
+                          <div className="flex items-center justify-between">
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-r ${visuals.gradient} group-hover:scale-110 transition-transform`}>
+                                  <Icon name={visuals.icon} className="w-6 h-6 text-white" />
+                              </div>
+                               <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                           <h3 className="text-xl font-bold text-foreground mt-4 group-hover:text-purple-600 transition-colors">
+                              {category}
+                          </h3>
+                       </div>
+                       <Badge variant="secondary" className="mt-2 font-semibold w-fit">
+                          {categoryData.length} quiz
+                      </Badge>
                     </CardContent>
                 </Card>
               );
