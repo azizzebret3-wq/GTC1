@@ -8,12 +8,30 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, XCircle, Clock, Info, Award, Activity, Loader, ArrowLeft, ArrowRight, Heart, Users } from 'lucide-react';
+import { 
+  CheckCircle, 
+  XCircle, 
+  Clock, 
+  Info, 
+  Award, 
+  Activity, 
+  Loader, 
+  ArrowLeft, 
+  ArrowRight, 
+  Heart, 
+  Users,
+  Trophy,
+  Sparkles,
+  ChevronRight,
+  ChevronLeft,
+  BookOpen
+} from 'lucide-react';
 import { getQuizzesFromFirestore, Quiz, saveAttemptToFirestore } from '@/lib/firestore.service';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth.tsx';
 import MathText from '@/components/math-text';
 import { saveQuizLocally, getQuizLocally } from '@/lib/localdb.service';
+import { cn } from '@/lib/utils';
 
 type ActiveQuiz = Omit<Quiz, 'id'> & { id: string };
 
@@ -30,31 +48,34 @@ const EncouragementCard = ({ score, total }: { score: number; total: number }) =
   const percentage = total > 0 ? (score / total) * 100 : 0;
   let title = '';
   let message = '';
-  let color = '';
+  let gradient = '';
 
   if (percentage >= 80) {
-    title = 'Excellent travail !';
-    message = 'Vous maîtrisez le sujet. Continuez sur cette lancée impressionnante !';
-    color = 'from-green-500 to-emerald-500';
+    title = 'Impressionnant !';
+    message = 'Vous maîtrisez parfaitement ce sujet. Vous êtes sur la voie royale de la réussite ! 🏆';
+    gradient = 'from-emerald-500 to-teal-600';
   } else if (percentage >= 50) {
-    title = 'Bon effort !';
-    message = 'Vous êtes sur la bonne voie. La persévérance est la clé du succès. Analysez vos erreurs et continuez à vous entraîner.';
-    color = 'from-blue-500 to-cyan-500';
+    title = 'Bien joué !';
+    message = 'C\'est un résultat solide. Un peu plus de révisions sur les points faibles et vous serez au sommet. 💪';
+    gradient = 'from-blue-500 to-indigo-600';
   } else {
-    title = 'Ne baissez pas les bras !';
-    message = 'Chaque erreur est une opportunité d\'apprendre. Ce quiz est un pas de plus vers votre réussite. Continuez à travailler dur !';
-    color = 'from-orange-500 to-red-500';
+    title = 'Ne lâchez rien !';
+    message = 'Chaque erreur est une marche vers le succès. Analysez les corrections, apprenez, et revenez plus fort. ✨';
+    gradient = 'from-rose-500 to-pink-600';
   }
 
   return (
-    <Card className={`bg-gradient-to-r ${color} text-white shadow-xl`}>
+    <Card className={cn("text-white shadow-2xl border-0 overflow-hidden relative", `bg-gradient-to-br ${gradient}`)}>
+      <div className="absolute top-0 right-0 p-4 opacity-10">
+        <Sparkles className="w-24 h-24 rotate-12" />
+      </div>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Heart className="w-6 h-6" /> {title}
+        <CardTitle className="flex items-center gap-3 text-2xl font-black italic">
+          <Heart className="w-8 h-8 fill-current animate-pulse" /> {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p>{message}</p>
+        <p className="text-lg font-medium opacity-90 leading-relaxed">{message}</p>
       </CardContent>
     </Card>
   );
@@ -68,54 +89,41 @@ const RankingCard = ({ score, totalQuestions }: { score: number; totalQuestions:
     const simulatedParticipants = Math.floor(Math.random() * 51) + 150;
     setTotalParticipants(simulatedParticipants);
 
-    const normalizedScore = (score / totalQuestions) * 50;
-
+    const normalizedScore = (score / totalQuestions) * 100;
     let calculatedRank = 0;
-    
     const randomInRange = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-    if (normalizedScore >= 50) {
-      calculatedRank = 1;
-    } else if (normalizedScore >= 45) {
-      calculatedRank = randomInRange(2, 5);
-    } else if (normalizedScore >= 40) {
-      calculatedRank = randomInRange(6, 15);
-    } else if (normalizedScore >= 30) {
-      calculatedRank = randomInRange(16, 40);
-    } else if (normalizedScore >= 20) {
-      calculatedRank = randomInRange(41, 75);
-    } else {
-      calculatedRank = randomInRange(76, simulatedParticipants);
-    }
+    if (normalizedScore >= 95) calculatedRank = randomInRange(1, 3);
+    else if (normalizedScore >= 80) calculatedRank = randomInRange(4, 15);
+    else if (normalizedScore >= 60) calculatedRank = randomInRange(16, 45);
+    else if (normalizedScore >= 40) calculatedRank = randomInRange(46, 80);
+    else calculatedRank = randomInRange(81, simulatedParticipants);
 
     setRank(calculatedRank);
-
   }, [score, totalQuestions]);
   
   if (rank === 0) return null;
 
-  const getRankingMessage = () => {
-      const percentageRank = (rank / totalParticipants) * 100;
-      if (rank === 1) return "Félicitations ! Vous êtes premier ! 🏆";
-      if (percentageRank <= 10) return "Dans le top 10% ! Excellent !";
-      if (percentageRank <= 25) return "Dans le premier quart. Très bonne performance !";
-      if (percentageRank <= 50) return "Dans la première moitié. Continuez vos efforts !";
-      return "Continuez à vous entraîner pour améliorer votre classement.";
-  };
-
-
   return (
-      <Card className="glassmorphism shadow-xl">
-          <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl font-bold">
+      <Card className="glassmorphism shadow-2xl border-0 overflow-hidden group">
+          <div className="h-2 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+          <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-3 text-xl font-black gradient-text">
                   <Users className="w-6 h-6 text-indigo-500"/>
-                  Votre Classement
+                  Performance Globale
               </CardTitle>
           </CardHeader>
-          <CardContent className="text-center space-y-2">
-              <p className="text-4xl font-black">{rank}<span className="text-2xl font-bold text-muted-foreground">ème</span></p>
-              <p className="text-muted-foreground">sur {totalParticipants} participants</p>
-              <p className="font-semibold text-indigo-600 pt-2">{getRankingMessage()}</p>
+          <CardContent className="text-center py-6">
+              <div className="relative inline-block mb-2">
+                <p className="text-6xl font-black tracking-tighter text-foreground group-hover:scale-110 transition-transform">
+                  {rank}
+                  <span className="text-xl font-bold text-muted-foreground ml-1">ème</span>
+                </p>
+              </div>
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">sur {totalParticipants} participants</p>
+              <div className="mt-6 p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
+                Vous faites partie des meilleurs candidats !
+              </div>
           </CardContent>
       </Card>
   );
@@ -132,7 +140,7 @@ function TakeQuizComponent() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<string[][]>([]);
   const [quizFinished, setQuizFinished] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(900); // 15 minutes default
+  const [timeLeft, setTimeLeft] = useState(900);
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -155,7 +163,6 @@ function TakeQuizComponent() {
     const newResults: QuestionResult[] = quiz.questions.map((q, index) => {
       const userSelection = userAnswers[index] || [];
       const correctAnswers = q.correctAnswers || [];
-      
       const isCorrect = userSelection.length === correctAnswers.length &&
                         userSelection.sort().every((answer, i) => answer === [...correctAnswers].sort()[i]);
 
@@ -174,8 +181,7 @@ function TakeQuizComponent() {
     const totalQuestions = quiz.questions.length;
     
     try {
-      if (quizSource === 'generated' || quizSource === 'quick-practice') {
-        } else {
+      if (quizSource !== 'generated' && quizSource !== 'quick-practice') {
            await saveAttemptToFirestore({
               userId: user.uid,
               quizId: quiz.id,
@@ -216,7 +222,7 @@ function TakeQuizComponent() {
             const allQuizzes = await getQuizzesFromFirestore();
             loadedQuizData = allQuizzes.find(q => q.id === quizIdParam) || null;
             if (loadedQuizData) {
-              await saveQuizLocally(loadedQuizData); // Cache the quiz for offline use
+              await saveQuizLocally(loadedQuizData);
             }
           }
         }
@@ -290,97 +296,132 @@ function TakeQuizComponent() {
     });
   };
 
-  if (loading || !quiz) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-          <Loader className="w-12 h-12 animate-spin text-purple-500" />
-          <p className="font-medium text-muted-foreground">Chargement du quiz...</p>
-      </div>
-    );
-  }
-  
-  if (!quiz.questions || quiz.questions.length === 0) {
-     return (
-      <div className="p-4 sm:p-6 md:p-8 space-y-6">
-        <Card className="glassmorphism shadow-xl">
-          <CardHeader className="text-center">
-             <XCircle className="w-16 h-16 mx-auto text-red-500" />
-             <CardTitle className="text-3xl font-black gradient-text">Quiz Invalide</CardTitle>
-             <CardDescription className="text-lg font-medium">Ce quiz ne contient aucune question.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button onClick={() => router.push('/dashboard/quizzes')}>
-                Retourner à la liste des quiz
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  if (loading || !quiz) {
+    return (
+      <div className="flex flex-col gap-6 justify-center items-center h-screen bg-background">
+          <div className="relative">
+            <Loader className="w-16 h-16 animate-spin text-primary" />
+            <Sparkles className="absolute -top-1 -right-1 w-6 h-6 text-yellow-500 animate-pulse" />
+          </div>
+          <p className="font-black text-xl gradient-text animate-pulse">Préparation de votre succès...</p>
+      </div>
+    );
+  }
+  
   const score = results.filter(r => r.isCorrect).length;
 
   if (quizFinished) {
+    const percentage = Math.round((score / quiz.questions.length) * 100);
+    
     return (
-      <div className="p-4 sm:p-6 md:p-8 space-y-6">
-        <Card className="glassmorphism shadow-xl">
-          <CardHeader className="text-center">
-            <Award className="w-16 h-16 mx-auto text-yellow-500" />
-            <CardTitle className="text-3xl font-black gradient-text">Résultats du Quiz</CardTitle>
-            <CardDescription className="text-lg font-medium">{quiz.title}</CardDescription>
+      <div className="p-4 sm:p-6 md:p-8 space-y-8 max-w-5xl mx-auto pb-24">
+        {/* Header Résultats */}
+        <Card className="glassmorphism shadow-2xl border-0 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-50"></div>
+          <CardHeader className="text-center pt-10 pb-6 relative z-10">
+            <div className="mx-auto w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-2xl mb-6 transform rotate-3">
+              <Trophy className="w-12 h-12 text-white" />
+            </div>
+            <CardTitle className="text-4xl font-black gradient-text tracking-tighter mb-2">Résultats : {percentage}%</CardTitle>
+            <CardDescription className="text-lg font-bold text-muted-foreground">« {quiz.title} »</CardDescription>
           </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-5xl font-bold">
-              {score} / {quiz.questions.length}
-            </p>
-            <Progress value={(score / quiz.questions.length) * 100} className="w-full max-w-sm mx-auto" />
-             <Button onClick={() => router.push('/dashboard/quizzes')}>
-                Retourner à la liste des quiz
-            </Button>
+          <CardContent className="text-center space-y-8 relative z-10 pb-10">
+            <div className="flex flex-col items-center">
+                <p className="text-7xl font-black text-foreground mb-4">
+                {score} <span className="text-3xl text-muted-foreground">/ {quiz.questions.length}</span>
+                </p>
+                <div className="w-full max-w-md h-4 bg-muted rounded-full overflow-hidden mb-8 border shadow-inner">
+                   <div 
+                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out" 
+                    style={{ width: `${percentage}%` }}
+                   ></div>
+                </div>
+                <div className="flex gap-4">
+                  <Button onClick={() => router.push('/dashboard/quizzes')} className="h-12 px-8 rounded-xl font-bold bg-primary text-white shadow-xl hover:scale-105 transition-transform">
+                      <BookOpen className="w-5 h-5 mr-2" /> Retour aux Quiz
+                  </Button>
+                  <Button variant="outline" onClick={() => window.location.reload()} className="h-12 px-8 rounded-xl font-bold border-2 hover:bg-muted transition-all">
+                      Recommencer
+                  </Button>
+                </div>
+            </div>
           </CardContent>
         </Card>
 
-        {quiz.isMockExam && <RankingCard score={score} totalQuestions={quiz.questions.length} />}
-
-        <EncouragementCard score={score} total={quiz.questions.length} />
+        {/* Grille de stats secondaires */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {quiz.isMockExam && <RankingCard score={score} totalQuestions={quiz.questions.length} />}
+            <EncouragementCard score={score} total={quiz.questions.length} />
+        </div>
         
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold flex items-center gap-2"><Activity/>Correction détaillée</h2>
+        {/* Correction Détaillée */}
+        <div className="space-y-6 pt-6">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
+                <Activity className="w-6 h-6 text-indigo-600" />
+             </div>
+             <h2 className="text-2xl font-black text-foreground tracking-tight">Correction Pédagogique</h2>
+          </div>
+          
           {results.map((result, index) => (
-            <Card key={index} className="glassmorphism shadow-lg">
-              <CardContent className="p-6 space-y-3">
-                <div className="font-bold">{index + 1}. <MathText text={result.question} /></div>
-                <div className="space-y-2">
-                  {result.options.map(option => {
+            <Card key={index} className="glassmorphism shadow-xl border-0 overflow-hidden border-l-8" style={{borderLeftColor: result.isCorrect ? '#10b981' : '#ef4444'}}>
+              <CardContent className="p-6 md:p-8 space-y-6">
+                <div className="flex items-start gap-4">
+                   <span className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-sm font-black shrink-0 mt-1">{index + 1}</span>
+                   <div className="text-lg md:text-xl font-bold leading-relaxed text-foreground">
+                      <MathText text={result.question} />
+                   </div>
+                </div>
+
+                <div className="grid gap-3 pl-0 md:pl-12">
+                  {result.options.map((option, oIdx) => {
                     const isSelected = result.selectedAnswers.includes(option);
                     const isCorrect = result.correctAnswers.includes(option);
                     
-                    let itemClass = "bg-white/50 dark:bg-black/20";
-                    if (isSelected && !isCorrect) itemClass = "bg-red-200/80 dark:bg-red-900/50";
-                    if (isCorrect) itemClass = "bg-green-200/80 dark:bg-green-900/50";
+                    let stateClass = "border-2 bg-muted/20 text-muted-foreground border-transparent";
+                    if (isSelected && !isCorrect) stateClass = "border-red-500 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 font-bold";
+                    if (isCorrect) stateClass = "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 font-bold";
 
                     return (
-                      <div key={option} className={`flex items-center gap-3 text-sm p-2 rounded-md ${itemClass}`}>
-                         {(isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-600" />}
-                         {(isSelected && !isCorrect) && <XCircle className="w-5 h-5 text-red-600" />}
-                         {(!isSelected && isCorrect) && <CheckCircle className="w-5 h-5 text-green-600 opacity-50" />}
-                         {(!isSelected && !isCorrect) && <div className="w-5 h-5" /> /* Placeholder */}
-                        
-                        <span className="flex-1"><MathText text={option} /></span>
+                      <div key={oIdx} className={cn("flex items-center gap-4 p-4 rounded-2xl transition-all", stateClass)}>
+                         <div className="shrink-0">
+                            {isCorrect ? (
+                               <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                                  <CheckCircle className="w-4 h-4" />
+                               </div>
+                            ) : isSelected ? (
+                               <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-white">
+                                  <XCircle className="w-4 h-4" />
+                               </div>
+                            ) : (
+                               <div className="w-6 h-6 rounded-full border-2 border-muted"></div>
+                            )}
+                         </div>
+                         <div className="text-base flex-1">
+                            <MathText text={option} />
+                         </div>
                       </div>
                     );
                   })}
                 </div>
+
                 {result.explanation && (
-                  <div className="mt-2 p-3 text-sm rounded-lg bg-blue-50 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 flex items-start gap-2">
-                    <Info className="w-4 h-4 mt-0.5 shrink-0" />
-                    <div><strong>Explication :</strong> <MathText text={result.explanation} /></div>
+                  <div className="mt-6 p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/20 border-2 border-indigo-100 dark:border-indigo-900/30 flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center shrink-0">
+                        <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                        <h4 className="font-black text-indigo-700 dark:text-indigo-300 text-sm uppercase tracking-wider mb-1">L'avis de l'expert :</h4>
+                        <div className="text-indigo-900 dark:text-indigo-200 text-base leading-relaxed">
+                            <MathText text={result.explanation} />
+                        </div>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -396,60 +437,101 @@ function TakeQuizComponent() {
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 flex items-center justify-center min-h-[calc(100vh-100px)]">
-      <Card className="w-full max-w-3xl glassmorphism shadow-2xl">
-        <CardHeader>
-          <div className="flex justify-between items-start mb-2 gap-4">
-             <Button variant="ghost" size="icon" className="shrink-0" onClick={() => router.back()}>
-                <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className='flex-1 text-center'>
-                <CardTitle className="text-xl font-bold gradient-text">{quiz.title}</CardTitle>
-                <CardDescription>Question {currentQuestionIndex + 1} sur {quiz.questions.length}</CardDescription>
-            </div>
-            <div className="flex items-center gap-2 font-bold text-purple-600 bg-purple-100 dark:bg-purple-900/50 px-3 py-1 rounded-full text-sm shrink-0">
-              <Clock className="w-4 h-4" />
-              <span>{formatTime(timeLeft)}</span>
-            </div>
+    <div className="p-4 sm:p-6 md:p-8 flex flex-col items-center min-h-[calc(100vh-100px)] max-w-4xl mx-auto pb-24">
+      {/* Quiz Header Bar */}
+      <div className="w-full glassmorphism p-4 rounded-2xl shadow-xl mb-8 flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                  <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => router.back()}>
+                      <ChevronLeft className="w-6 h-6" />
+                  </Button>
+                  <div>
+                      <h2 className="font-black text-lg gradient-text leading-none mb-1">{quiz.title}</h2>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Question {currentQuestionIndex + 1} sur {quiz.questions.length}</p>
+                  </div>
+              </div>
+              <div className={cn(
+                  "flex items-center gap-2 font-black px-4 py-2 rounded-xl text-sm transition-colors",
+                  timeLeft < 60 ? "bg-red-100 text-red-600 animate-pulse" : "bg-primary/10 text-primary"
+              )}>
+                  <Clock className="w-4 h-4" />
+                  <span>{formatTime(timeLeft)}</span>
+              </div>
           </div>
-          <Progress value={progress} className="w-full mt-2" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="text-lg font-semibold"><MathText text={currentQuestion.question} /></div>
-            <div className="space-y-3">
-              {currentQuestion.options.map((option, index) => (
-                 <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-white/50 dark:bg-black/20 hover:bg-purple-50 dark:hover:bg-purple-900/50 transition-all">
-                    <Checkbox 
-                        id={`option-${index}`}
-                        checked={selectedAnswersForCurrent.includes(option)}
-                        onCheckedChange={(checked) => handleAnswerChange(option, !!checked)}
-                    />
-                    <Label htmlFor={`option-${index}`} className="font-medium flex-1 cursor-pointer">
+          <Progress value={progress} className="h-2 rounded-full" />
+      </div>
+
+      {/* Question Card */}
+      <Card className="w-full glassmorphism shadow-2xl border-0 overflow-hidden">
+        <CardContent className="p-6 md:p-10 space-y-10">
+          <div className="text-xl md:text-2xl font-bold text-foreground leading-relaxed text-center md:text-left">
+            <MathText text={currentQuestion.question} />
+          </div>
+
+          <div className="grid gap-4">
+            {currentQuestion.options.map((option, index) => {
+              const isChecked = selectedAnswersForCurrent.includes(option);
+              return (
+                 <label 
+                    key={index} 
+                    className={cn(
+                        "flex items-center space-x-4 p-5 rounded-2xl cursor-pointer transition-all duration-300 border-2 hover:translate-x-1",
+                        isChecked 
+                            ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20" 
+                            : "bg-white/50 dark:bg-black/20 border-transparent hover:border-primary/30"
+                    )}
+                 >
+                    <div className={cn(
+                        "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0",
+                        isChecked ? "border-white bg-white text-indigo-600" : "border-muted-foreground/30"
+                    )}>
+                        <Checkbox 
+                            id={`option-${index}`}
+                            checked={isChecked}
+                            onCheckedChange={(checked) => handleAnswerChange(option, !!checked)}
+                            className="hidden"
+                        />
+                        {isChecked && <div className="w-2.5 h-2.5 bg-current rounded-full" />}
+                    </div>
+                    <span className="font-bold text-lg md:text-xl flex-1">
                         <MathText text={option} />
-                    </Label>
-                 </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Cette question peut avoir une ou plusieurs bonnes réponses.
-            </p>
-            <div className="flex justify-between gap-4">
-              <Button onClick={handlePreviousQuestion} variant="outline" disabled={currentQuestionIndex === 0}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Précédent
+                    </span>
+                 </label>
+              )
+            })}
+          </div>
+
+          <p className="text-xs font-black text-muted-foreground text-center uppercase tracking-widest opacity-60">
+             Un ou plusieurs choix possibles
+          </p>
+
+          <div className="flex justify-between gap-4 pt-6 border-t border-muted">
+            <Button 
+                onClick={handlePreviousQuestion} 
+                variant="outline" 
+                disabled={currentQuestionIndex === 0}
+                className="h-14 px-6 rounded-2xl font-black transition-all hover:bg-muted"
+            >
+              <ChevronLeft className="w-5 h-5 mr-2" />
+              Précédent
+            </Button>
+            
+            {currentQuestionIndex === quiz.questions.length - 1 ? (
+              <Button 
+                onClick={() => handleFinishQuiz()} 
+                className="h-14 px-10 rounded-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-2xl hover:scale-105 transition-transform"
+              >
+                Terminer le Quiz
               </Button>
-              {currentQuestionIndex === quiz.questions.length - 1 ? (
-                <Button onClick={() => handleFinishQuiz()} className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold shadow-lg">
-                  Terminer le Quiz
-                </Button>
-              ) : (
-                <Button onClick={handleNextQuestion} className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold shadow-lg">
-                  Suivant
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              )}
-            </div>
+            ) : (
+              <Button 
+                onClick={handleNextQuestion} 
+                className="h-14 px-10 rounded-2xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-2xl hover:scale-105 transition-transform"
+              >
+                Suivant
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -460,9 +542,9 @@ function TakeQuizComponent() {
 export default function TakeQuizPage() {
     return (
         <React.Suspense fallback={
-            <div className="flex flex-col gap-4 justify-center items-center h-screen">
-                <Loader className="w-12 h-12 animate-spin text-purple-500" />
-                <p className="font-medium text-muted-foreground">Préparation du quiz...</p>
+            <div className="flex flex-col gap-6 justify-center items-center h-screen bg-background">
+                <Loader className="w-16 h-16 animate-spin text-primary" />
+                <p className="font-black text-xl gradient-text animate-pulse">Chargement de votre session...</p>
             </div>
         }>
             <TakeQuizComponent />
