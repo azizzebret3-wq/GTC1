@@ -1,5 +1,3 @@
-
-// src/app/dashboard/quizzes/[category]/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -14,7 +12,9 @@ import {
   ClipboardList,
   ArrowLeft,
   WifiOff,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  DownloadCloud
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
-import { getAllLocalQuizzes } from '@/lib/localdb.service';
+import { getAllLocalQuizzes, saveQuizLocally } from '@/lib/localdb.service';
 import * as LucideIcons from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -67,10 +67,7 @@ export default function QuizListPage() {
     access: 'all',
   });
   const [isOffline, setIsOffline] = useState(false);
-
-  const isPremium = userData?.subscription_type === 'premium';
-  const isAdmin = userData?.role === 'admin';
-  const canAccessPremium = isPremium || isAdmin;
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   useEffect(() => {
     const handleOnlineStatus = () => setIsOffline(!navigator.onLine);
@@ -83,36 +80,53 @@ export default function QuizListPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchQuizzes = async () => {
-      setIsLoadingQuizzes(true);
-      try {
-        // Fetch offline status
-        const localQuizzes = await getAllLocalQuizzes();
-        const localIds = new Set(localQuizzes.map(q => q.id));
-        setOfflineQuizIds(localIds);
+  const refreshQuizList = async () => {
+    setIsLoadingQuizzes(true);
+    try {
+      const localQuizzes = await getAllLocalQuizzes();
+      const localIds = new Set(localQuizzes.map(q => q.id));
+      setOfflineQuizIds(localIds);
 
-        let allQuizzes: Quiz[] = [];
-        if (isOffline) {
-          allQuizzes = localQuizzes;
-        } else {
-          allQuizzes = await getQuizzesFromFirestore();
-        }
-        
-        const categoryQuizzes = allQuizzes.filter(q => !q.isMockExam && q.category === category);
-        setQuizzes(categoryQuizzes);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Erreur de chargement',
-          description: 'Impossible de récupérer les quiz.',
-        });
-      } finally {
-        setIsLoadingQuizzes(false);
+      let allQuizzes: Quiz[] = [];
+      if (!navigator.onLine) {
+        allQuizzes = localQuizzes;
+      } else {
+        allQuizzes = await getQuizzesFromFirestore();
       }
-    };
-    fetchQuizzes();
-  }, [toast, isOffline, category]);
+      
+      const categoryQuizzes = allQuizzes.filter(q => !q.isMockExam && q.category === category);
+      setQuizzes(categoryQuizzes);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de chargement',
+        description: 'Impossible de récupérer les quiz.',
+      });
+    } finally {
+      setIsLoadingQuizzes(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshQuizList();
+  }, [category, isOffline]);
+
+  const handleDownloadQuiz = async (quiz: Quiz) => {
+    if (!navigator.onLine) {
+        toast({ title: 'Hors ligne', description: 'Connectez-vous pour télécharger.', variant: 'destructive' });
+        return;
+    }
+    setIsDownloading(quiz.id!);
+    try {
+        await saveQuizLocally(quiz);
+        setOfflineQuizIds(prev => new Set(prev).add(quiz.id!));
+        toast({ title: 'Téléchargé !', description: 'Ce quiz est prêt pour le mode hors ligne.' });
+    } catch (e) {
+        toast({ title: 'Erreur', description: 'Le téléchargement a échoué.', variant: 'destructive' });
+    } finally {
+        setIsDownloading(null);
+    }
+  };
 
   const handleFilterChange = (type: string, value: string) => {
     setFilters(prev => ({ ...prev, [type]: value }));
@@ -129,6 +143,7 @@ export default function QuizListPage() {
   const difficulties = ['all', 'facile', 'moyen', 'difficile'];
   const accessTypes = ['all', 'gratuit', 'premium'];
   const visuals = categoryVisuals[category] || categoryVisuals.default;
+  const canAccessPremium = userData?.subscription_type === 'premium' || userData?.role === 'admin';
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -161,7 +176,7 @@ export default function QuizListPage() {
         <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-900 p-4 rounded-2xl flex items-center gap-3">
           <WifiOff className="w-5 h-5 text-yellow-600" />
           <p className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
-            Mode hors ligne : Seuls les quiz avec l'icône <CheckCircle2 className="inline w-3 h-3 mx-1 text-green-500"/> sont accessibles.
+            Mode hors ligne : Seuls les quiz téléchargés sont accessibles.
           </p>
         </Card>
       )}
@@ -206,50 +221,52 @@ export default function QuizListPage() {
             {filteredQuizzes.map((quiz) => {
               const isCached = offlineQuizIds.has(quiz.id!);
               const isLocked = quiz.access_type === 'premium' && !canAccessPremium && !isOffline;
-              const canPlayOffline = isCached || !isOffline;
-
+              
               return (
                 <Card key={quiz.id} className={`card-hover glassmorphism shadow-xl group overflow-hidden border-0 flex flex-col ${isOffline && !isCached ? 'opacity-60 grayscale' : ''}`}>
                   <CardContent className="p-5 flex-grow">
                     <div className="flex justify-between items-start">
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className={`text-xs font-semibold capitalize ${
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className={`text-[10px] font-bold uppercase ${
                             quiz.difficulty === 'facile' ? 'border-green-300 text-green-700' :
                             quiz.difficulty === 'moyen' ? 'border-yellow-300 text-yellow-700' :
                             'border-red-300 text-red-700'
                         }`}>
                             {quiz.difficulty}
                         </Badge>
-                        {isCached && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5 py-0.5">
-                                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                                            Dispo offline
-                                        </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Ce quiz est enregistré sur votre téléphone.</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                        {isCached ? (
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5 py-0.5">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Offline
+                            </Badge>
+                        ) : !isLocked && !isOffline && (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-5 px-1.5 text-[10px] text-primary hover:bg-primary/10 rounded-full"
+                                onClick={() => handleDownloadQuiz(quiz)}
+                                disabled={isDownloading === quiz.id}
+                            >
+                                {isDownloading === quiz.id ? (
+                                    <Loader className="w-3 h-3 animate-spin mr-1" />
+                                ) : (
+                                    <DownloadCloud className="w-3 h-3 mr-1" />
+                                )}
+                                Télécharger
+                            </Button>
                         )}
                       </div>
                       {quiz.access_type === 'premium' && (
-                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs">
-                          <Crown className="w-3 h-3 mr-1" />
+                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-[10px]">
+                          <Crown className="w-2.5 h-2.5 mr-1" />
                           Premium
                         </Badge>
                       )}
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white mt-3 mb-2 group-hover:text-purple-600 transition-colors">
+                    <h3 className="text-base font-bold text-foreground mt-3 mb-2 group-hover:text-primary transition-colors">
                       {quiz.title}
                     </h3>
-                    <p className="text-xs text-gray-500 font-medium mb-3">
-                      {quiz.category}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400 font-medium border-t border-gray-200 dark:border-gray-800 pt-3">
+                    <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-bold uppercase border-t border-muted pt-3">
                       <span>{quiz.total_questions} questions</span>
                       <span>{quiz.duration_minutes} min</span>
                     </div>
@@ -257,8 +274,8 @@ export default function QuizListPage() {
                   <Button 
                     className={`w-full font-bold text-white rounded-t-none h-12 text-sm ${
                       isLocked || (isOffline && !isCached)
-                        ? 'bg-gradient-to-r from-gray-400 to-gray-500'
-                        : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'
+                        ? 'bg-gray-400 grayscale'
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-[0.98]'
                     }`}
                     disabled={isOffline && !isCached}
                     onClick={(e) => {
@@ -292,12 +309,10 @@ export default function QuizListPage() {
             })}
           </div>
           {filteredQuizzes.length === 0 && (
-            <div className="text-center py-10 col-span-full">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ClipboardList className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-600 mb-1">Aucun quiz trouvé</h3>
-                <p className="text-gray-500 text-sm">Essayez de modifier vos filtres ou revenez plus tard.</p>
+            <div className="text-center py-20 bg-muted/10 rounded-3xl border-2 border-dashed border-muted">
+                <ClipboardList className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-muted-foreground">Aucun quiz trouvé</h3>
+                <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto">Essayez de modifier vos filtres ou revenez plus tard.</p>
             </div>
           )}
         </>
