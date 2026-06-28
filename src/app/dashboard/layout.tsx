@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Logo } from '@/components/logo';
 import WhatsAppFloat from '@/components/whatsapp-float';
 import TiktokFloat from '@/components/tiktok-float';
+import GTCCoach from '@/components/gtc-coach';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   DropdownMenu,
@@ -569,6 +570,7 @@ export default function DashboardLayout({
 
         <TiktokFloat />
         <WhatsAppFloat />
+        <GTCCoach />
         
          {/* Bottom mobile navigation */}
          <div className="lg:hidden fixed bottom-0 left-0 right-0 glassmorphism border-t z-30">
