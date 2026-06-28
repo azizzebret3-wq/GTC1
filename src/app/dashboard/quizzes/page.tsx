@@ -1,3 +1,4 @@
+
 // src/app/dashboard/quizzes/page.tsx
 'use client';
 
@@ -8,36 +9,57 @@ import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
 import { getAllLocalQuizzes } from '@/lib/localdb.service';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader, ClipboardList, ArrowRight, WifiOff, Book, Calculator, TestTube2, Languages, Globe, Scale, Landmark, Brain, Atom, History, Map, FileQuestion, GraduationCap, CheckCheck, Newspaper } from 'lucide-react';
+import { 
+  Loader, 
+  ClipboardList, 
+  ArrowRight, 
+  WifiOff, 
+  Book, 
+  Calculator, 
+  TestTube2, 
+  Languages, 
+  Globe, 
+  Scale, 
+  Landmark, 
+  Brain, 
+  Atom, 
+  History, 
+  Map, 
+  FileQuestion, 
+  GraduationCap, 
+  CheckCheck, 
+  Newspaper,
+  BrainCircuit,
+  Zap
+} from 'lucide-react';
 import * as LucideIcons from "lucide-react";
 
 type IconName = keyof typeof LucideIcons;
 
-const categoryVisuals: { [key: string]: { icon: IconName; gradient: string } } = {
-  'Actualités': { icon: 'Newspaper', gradient: 'from-slate-500 to-gray-600'},
-  'Mathématiques': { icon: 'Calculator', gradient: 'from-blue-500 to-cyan-500' },
-  'SVT': { icon: 'TestTube2', gradient: 'from-green-500 to-emerald-500' },
-  'Français': { icon: 'Languages', gradient: 'from-orange-500 to-amber-500' },
-  'Culture Générale': { icon: 'Globe', gradient: 'from-indigo-500 to-purple-600' },
-  'Histoire': { icon: 'History', gradient: 'from-amber-600 to-yellow-700' },
-  'Géographie': { icon: 'Map', gradient: 'from-teal-500 to-cyan-600' },
-  'Tests Psychotechniques': { icon: 'Brain', gradient: 'from-rose-400 to-pink-500' },
-  'Physique-Chimie': { icon: 'Atom', gradient: 'from-sky-500 to-blue-600' },
-  'Philosophie': { icon: 'GraduationCap', gradient: 'from-purple-600 to-indigo-700' },
-  'Droit': { icon: 'Scale', gradient: 'from-gray-600 to-slate-700' },
-  'Économie': { icon: 'Landmark', gradient: 'from-lime-500 to-green-600' },
-  'Concours Passés': { icon: 'FileQuestion', gradient: 'from-stone-500 to-neutral-600' },
-  'Accompagnement Final': { icon: 'CheckCheck', gradient: 'from-yellow-400 to-orange-500' },
-  'Mixte': { icon: 'BrainCircuit', gradient: 'from-fuchsia-500 to-purple-600' },
-  'default': { icon: 'Book', gradient: 'from-gray-500 to-gray-600' }
+const categoryVisuals: { [key: string]: { icon: IconName; gradient: string; shadow: string } } = {
+  'Actualités': { icon: 'Newspaper', gradient: 'from-slate-500 to-gray-600', shadow: 'shadow-gray-500/20' },
+  'Mathématiques': { icon: 'Calculator', gradient: 'from-blue-500 to-cyan-500', shadow: 'shadow-blue-500/20' },
+  'SVT': { icon: 'TestTube2', gradient: 'from-green-500 to-emerald-500', shadow: 'shadow-green-500/20' },
+  'Français': { icon: 'Languages', gradient: 'from-orange-500 to-amber-500', shadow: 'shadow-orange-500/20' },
+  'Culture Générale': { icon: 'Globe', gradient: 'from-indigo-500 to-purple-600', shadow: 'shadow-indigo-500/20' },
+  'Histoire': { icon: 'History', gradient: 'from-amber-600 to-yellow-700', shadow: 'shadow-yellow-600/20' },
+  'Géographie': { icon: 'Map', gradient: 'from-teal-500 to-cyan-600', shadow: 'shadow-teal-500/20' },
+  'Tests Psychotechniques': { icon: 'Brain', gradient: 'from-rose-400 to-pink-500', shadow: 'shadow-rose-400/20' },
+  'Physique-Chimie': { icon: 'Atom', gradient: 'from-sky-500 to-blue-600', shadow: 'shadow-sky-500/20' },
+  'Philosophie': { icon: 'GraduationCap', gradient: 'from-purple-600 to-indigo-700', shadow: 'shadow-purple-600/20' },
+  'Droit': { icon: 'Scale', gradient: 'from-gray-600 to-slate-700', shadow: 'shadow-slate-600/20' },
+  'Économie': { icon: 'Landmark', gradient: 'from-lime-500 to-green-600', shadow: 'shadow-lime-500/20' },
+  'Concours Passés': { icon: 'FileQuestion', gradient: 'from-stone-500 to-neutral-600', shadow: 'shadow-stone-500/20' },
+  'Accompagnement Final': { icon: 'CheckCheck', gradient: 'from-yellow-400 to-orange-500', shadow: 'shadow-yellow-400/20' },
+  'Mixte': { icon: 'BrainCircuit', gradient: 'from-fuchsia-500 to-purple-600', shadow: 'shadow-fuchsia-500/20' },
+  'default': { icon: 'Book', gradient: 'from-gray-500 to-gray-600', shadow: 'shadow-gray-500/20' }
 };
 
 const Icon = ({ name, ...props }: { name: IconName } & LucideIcons.LucideProps) => {
   const LucideIcon = LucideIcons[name] as React.ComponentType<LucideIcons.LucideProps>;
-  if (!LucideIcon) return <Book {...props} />; // Fallback icon
+  if (!LucideIcon) return <Book {...props} />; 
   return <LucideIcon {...props} />;
 };
-
 
 export default function QuizzesCategoryPage() {
   const router = useRouter();
@@ -65,13 +87,6 @@ export default function QuizzesCategoryPage() {
         let allQuizzes: Quiz[] = [];
         if (isOffline) {
           allQuizzes = await getAllLocalQuizzes();
-          if (allQuizzes.length === 0) {
-            toast({
-              title: "Mode hors ligne",
-              description: "Aucun quiz n'a été sauvegardé pour une consultation hors ligne.",
-              variant: 'default',
-            });
-          }
         } else {
           allQuizzes = await getQuizzesFromFirestore();
         }
@@ -100,21 +115,49 @@ export default function QuizzesCategoryPage() {
     return acc;
   }, {} as Record<string, Quiz[]>);
 
-  const categories = Object.keys(quizzesByCategory);
+  const categories = Object.keys(quizzesByCategory).sort();
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
+      <style>{`
+        .category-card {
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .category-card:hover {
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .category-card:active {
+          transform: scale(0.98);
+        }
+        .gradient-text {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .glassmorphism {
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .glassmorphism {
+          background: rgba(20, 20, 30, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+      `}</style>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
               <ClipboardList className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black gradient-text">
                 Catégories de Quiz
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 font-medium">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium">
                 Choisissez une matière pour commencer votre entraînement.
               </p>
             </div>
@@ -123,7 +166,7 @@ export default function QuizzesCategoryPage() {
       </div>
       
        {isOffline && (
-        <Card className="bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800 p-4">
+        <Card className="bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800 p-4 rounded-2xl">
           <div className="flex items-center gap-3">
             <WifiOff className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
             <div>
@@ -139,48 +182,51 @@ export default function QuizzesCategoryPage() {
             <Loader className="w-10 h-10 animate-spin text-purple-500"/>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {categories.map((category) => {
-              const categoryData = quizzesByCategory[category];
-              const visuals = categoryVisuals[category] || categoryVisuals.default;
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+          {categories.map((category) => {
+            const categoryData = quizzesByCategory[category];
+            const visuals = categoryVisuals[category] || categoryVisuals.default;
 
-              return (
-                <Card 
-                  key={category} 
-                  className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 cursor-pointer"
-                  onClick={() => router.push(`/dashboard/quizzes/${encodeURIComponent(category)}`)}
-                >
-                    <CardContent className="p-6 flex flex-col justify-between h-full">
-                       <div>
-                          <div className="flex items-center justify-between">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-r ${visuals.gradient} group-hover:scale-110 transition-transform`}>
-                                  <Icon name={visuals.icon} className="w-6 h-6 text-white" />
-                              </div>
-                               <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-transform" />
-                          </div>
-                           <h3 className="text-xl font-bold text-foreground mt-4 group-hover:text-purple-600 transition-colors">
-                              {category}
-                          </h3>
-                       </div>
-                       <Badge variant="secondary" className="mt-2 font-semibold w-fit">
-                          {categoryData.length} quiz
-                      </Badge>
-                    </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-          {categories.length === 0 && (
-            <div className="text-center py-10 col-span-full">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ClipboardList className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-600 mb-1">Aucun quiz trouvé</h3>
-                <p className="text-gray-500 text-sm">{isOffline ? "Veuillez vous connecter pour voir tous les quiz." : "De nouveaux quiz seront bientôt ajoutés."}</p>
-            </div>
-          )}
-        </>
+            return (
+              <Card 
+                key={category} 
+                className="category-card glassmorphism shadow-xl overflow-hidden border-0 cursor-pointer aspect-square"
+                onClick={() => router.push(`/dashboard/quizzes/${encodeURIComponent(category)}`)}
+              >
+                  <CardContent className="p-4 sm:p-6 flex flex-col items-center justify-center h-full text-center relative group">
+                     {/* Background Glow */}
+                     <div className={`absolute inset-0 bg-gradient-to-br ${visuals.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
+                     
+                     <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-lg bg-gradient-to-r ${visuals.gradient} ${visuals.shadow} mb-4 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3`}>
+                        <Icon name={visuals.icon} className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                     </div>
+                     
+                     <h3 className="text-sm sm:text-lg font-bold text-foreground leading-tight px-1 mb-2 group-hover:text-primary transition-colors">
+                        {category}
+                    </h3>
+                    
+                    <Badge variant="secondary" className="font-bold text-[10px] sm:text-xs bg-secondary/50 backdrop-blur-md">
+                        {categoryData.length} quiz
+                    </Badge>
+
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Zap className={`w-4 h-4 text-primary animate-pulse`} />
+                    </div>
+                  </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {!isLoadingQuizzes && categories.length === 0 && (
+        <div className="text-center py-20 bg-muted/20 rounded-3xl border-2 border-dashed border-muted">
+            <ClipboardList className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-muted-foreground">Aucun quiz trouvé</h3>
+            <p className="text-muted-foreground/80 max-w-xs mx-auto mt-2">
+                {isOffline ? "Connectez-vous pour découvrir tous les quiz disponibles." : "Notre équipe prépare de nouveaux contenus pour vous !"}
+            </p>
+        </div>
       )}
     </div>
   );
