@@ -127,7 +127,7 @@ const RankingCard = ({ score, totalQuestions }: { score: number; totalQuestions:
                   <span className="text-xl font-bold text-muted-foreground ml-1">ème</span>
                 </p>
               </div>
-              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">sur {totalParticipants} participants</p>
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest sur {totalParticipants} participants">sur {totalParticipants} participants</p>
               <div className="mt-6 p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
                 Vous faites partie des meilleurs candidats !
               </div>
@@ -199,8 +199,10 @@ function TakeQuizComponent() {
 
     const score = newResults.filter(r => r.isCorrect).length;
     const totalQuestions = quiz.questions.length;
+    
+    // XP Calculation
     const baseXP = score * 50;
-    const bonusXP = score === totalQuestions ? 200 : 0;
+    const bonusXP = score === totalQuestions && totalQuestions > 0 ? 200 : 0;
     const finalXP = baseXP + bonusXP;
     setXpEarned(finalXP);
     

@@ -1,3 +1,4 @@
+
 // src/hooks/useAuth.tsx
 'use client';
 
@@ -18,6 +19,8 @@ export interface UserData {
   subscription_tier?: 'mensuel' | 'annuel';
   subscription_expires_at?: Date | Timestamp | null;
   createdAt: any;
+  xp?: number;
+  level?: number;
 }
 
 interface AuthContextType {
@@ -53,6 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription_tier: data.subscription_tier,
           subscription_expires_at: data.subscription_expires_at,
           createdAt: data.createdAt,
+          xp: data.xp || 0,
+          level: data.level || 1,
         };
 
         // Check for subscription expiry only if online
