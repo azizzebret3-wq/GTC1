@@ -37,8 +37,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast"
 import { Logo } from '@/components/logo';
-import WhatsAppFloat from '@/components/whatsapp-float';
-import TiktokFloat from '@/components/tiktok-float';
 import GTCCoach from '@/components/gtc-coach';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -568,8 +566,6 @@ export default function DashboardLayout({
           {children}
         </main>
 
-        <TiktokFloat />
-        <WhatsAppFloat />
         <GTCCoach />
         
          {/* Bottom mobile navigation */}
