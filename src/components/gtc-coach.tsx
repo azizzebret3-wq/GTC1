@@ -61,7 +61,7 @@ export default function GTCCoach() {
         userContext: {
           fullName: userData?.fullName,
           competitionType: userData?.competitionType,
-          averageScore: 75, // Idéalement, on passerait les vraies stats ici
+          averageScore: 75,
           completedQuizzes: 12,
         },
         history: messages,
@@ -79,7 +79,7 @@ export default function GTCCoach() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-[60] w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 shadow-2xl hover:scale-110 transition-transform duration-300 group p-0 overflow-hidden border-4 border-white/20"
+        className="fixed bottom-24 lg:bottom-6 right-6 z-[60] w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 shadow-2xl hover:scale-110 transition-transform duration-300 group p-0 overflow-hidden border-4 border-white/20"
       >
         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <BrainCircuit className="w-7 h-7 text-white animate-pulse" />
@@ -93,7 +93,7 @@ export default function GTCCoach() {
 
   return (
     <div className={cn(
-      "fixed bottom-6 left-6 z-[60] transition-all duration-300 ease-in-out flex flex-col items-start",
+      "fixed bottom-24 lg:bottom-6 right-6 z-[60] transition-all duration-300 ease-in-out flex flex-col items-end",
       isMinimized ? "w-72" : "w-80 sm:w-96"
     )}>
       <Card className="glassmorphism shadow-2xl border-primary/20 overflow-hidden flex flex-col w-full h-[500px] max-h-[70vh]">
