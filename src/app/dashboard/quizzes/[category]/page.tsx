@@ -1,3 +1,4 @@
+
 // src/app/dashboard/quizzes/[category]/page.tsx
 'use client';
 
@@ -11,7 +12,9 @@ import {
   Rocket,
   Loader,
   ClipboardList,
-  ArrowLeft
+  ArrowLeft,
+  WifiOff,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getQuizzesFromFirestore, Quiz } from '@/lib/firestore.service';
 import { getAllLocalQuizzes } from '@/lib/localdb.service';
 import * as LucideIcons from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const categoryVisuals: { [key: string]: { icon: keyof typeof LucideIcons; gradient: string } } = {
@@ -55,6 +59,7 @@ export default function QuizListPage() {
   const category = decodeURIComponent(params.category as string);
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [offlineQuizIds, setOfflineQuizIds] = useState<Set<string>>(new Set());
   const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
@@ -82,9 +87,14 @@ export default function QuizListPage() {
     const fetchQuizzes = async () => {
       setIsLoadingQuizzes(true);
       try {
+        // Fetch offline status
+        const localQuizzes = await getAllLocalQuizzes();
+        const localIds = new Set(localQuizzes.map(q => q.id));
+        setOfflineQuizIds(localIds);
+
         let allQuizzes: Quiz[] = [];
         if (isOffline) {
-          allQuizzes = await getAllLocalQuizzes();
+          allQuizzes = localQuizzes;
         } else {
           allQuizzes = await getQuizzesFromFirestore();
         }
@@ -135,8 +145,8 @@ export default function QuizListPage() {
               <h1 className="text-2xl sm:text-3xl font-black gradient-text">
                 {category}
               </h1>
-              <p className="text-sm sm:text-base text-gray-600 font-medium">
-                {quizzes.length} quiz disponibles dans cette catégorie.
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium">
+                {quizzes.length} quiz disponibles {isOffline && 'en cache'}.
               </p>
             </div>
           </div>
@@ -146,6 +156,15 @@ export default function QuizListPage() {
             Toutes les catégories
         </Button>
       </div>
+
+      {isOffline && (
+        <Card className="bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-900 p-4 rounded-2xl flex items-center gap-3">
+          <WifiOff className="w-5 h-5 text-yellow-600" />
+          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+            Mode hors ligne : Seuls les quiz avec l'icône <CheckCircle2 className="inline w-3 h-3 mx-1 text-green-500"/> sont accessibles.
+          </p>
+        </Card>
+      )}
 
       <Card className="glassmorphism shadow-xl p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -185,18 +204,38 @@ export default function QuizListPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredQuizzes.map((quiz) => {
+              const isCached = offlineQuizIds.has(quiz.id!);
               const isLocked = quiz.access_type === 'premium' && !canAccessPremium && !isOffline;
+              const canPlayOffline = isCached || !isOffline;
+
               return (
-                <Card key={quiz.id} className="card-hover glassmorphism shadow-xl group overflow-hidden border-0 flex flex-col">
+                <Card key={quiz.id} className={`card-hover glassmorphism shadow-xl group overflow-hidden border-0 flex flex-col ${isOffline && !isCached ? 'opacity-60 grayscale' : ''}`}>
                   <CardContent className="p-5 flex-grow">
                     <div className="flex justify-between items-start">
-                      <Badge variant="outline" className={`text-xs font-semibold capitalize ${
-                        quiz.difficulty === 'facile' ? 'border-green-300 text-green-700' :
-                        quiz.difficulty === 'moyen' ? 'border-yellow-300 text-yellow-700' :
-                        'border-red-300 text-red-700'
-                      }`}>
-                        {quiz.difficulty}
-                      </Badge>
+                      <div className="flex gap-2">
+                        <Badge variant="outline" className={`text-xs font-semibold capitalize ${
+                            quiz.difficulty === 'facile' ? 'border-green-300 text-green-700' :
+                            quiz.difficulty === 'moyen' ? 'border-yellow-300 text-yellow-700' :
+                            'border-red-300 text-red-700'
+                        }`}>
+                            {quiz.difficulty}
+                        </Badge>
+                        {isCached && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5 py-0.5">
+                                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                                            Dispo offline
+                                        </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Ce quiz est enregistré sur votre téléphone.</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                      </div>
                       {quiz.access_type === 'premium' && (
                         <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 text-xs">
                           <Crown className="w-3 h-3 mr-1" />
@@ -204,23 +243,24 @@ export default function QuizListPage() {
                         </Badge>
                       )}
                     </div>
-                    <h3 className="text-base font-bold text-gray-900 mt-3 mb-2 group-hover:text-purple-600 transition-colors">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white mt-3 mb-2 group-hover:text-purple-600 transition-colors">
                       {quiz.title}
                     </h3>
                     <p className="text-xs text-gray-500 font-medium mb-3">
                       {quiz.category}
                     </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-600 font-medium border-t border-gray-200 pt-3">
+                    <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400 font-medium border-t border-gray-200 dark:border-gray-800 pt-3">
                       <span>{quiz.total_questions} questions</span>
                       <span>{quiz.duration_minutes} min</span>
                     </div>
                   </CardContent>
                   <Button 
                     className={`w-full font-bold text-white rounded-t-none h-12 text-sm ${
-                      isLocked 
+                      isLocked || (isOffline && !isCached)
                         ? 'bg-gradient-to-r from-gray-400 to-gray-500'
                         : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'
                     }`}
+                    disabled={isOffline && !isCached}
                     onClick={(e) => {
                       e.preventDefault();
                       if (isLocked) {
@@ -234,6 +274,11 @@ export default function QuizListPage() {
                         <>
                           <Lock className="w-4 h-4 mr-2" />
                           Premium
+                        </>
+                      ) : (isOffline && !isCached) ? (
+                        <>
+                           <WifiOff className="w-4 h-4 mr-2" />
+                           Indisponible
                         </>
                       ) : (
                         <>

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/take-quiz/page.tsx
 'use client';
 
@@ -24,7 +25,8 @@ import {
   Sparkles,
   ChevronRight,
   ChevronLeft,
-  BookOpen
+  BookOpen,
+  WifiOff
 } from 'lucide-react';
 import { getQuizzesFromFirestore, Quiz, saveAttemptToFirestore } from '@/lib/firestore.service';
 import { useToast } from '@/hooks/use-toast';
@@ -143,6 +145,18 @@ function TakeQuizComponent() {
   const [timeLeft, setTimeLeft] = useState(900);
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    const handleOnlineStatus = () => setIsOffline(!navigator.onLine);
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+    handleOnlineStatus();
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+    };
+  }, []);
 
   const handleFinishQuiz = useCallback(async () => {
     if (!quiz || !user || quizFinished) return;
@@ -182,6 +196,7 @@ function TakeQuizComponent() {
     
     try {
       if (quizSource !== 'generated' && quizSource !== 'quick-practice') {
+           // Firestore persistence will queue this for upload when online
            await saveAttemptToFirestore({
               userId: user.uid,
               quizId: quiz.id,
@@ -192,7 +207,10 @@ function TakeQuizComponent() {
               correctAnswers: score,
               createdAt: new Date(),
           });
-          toast({ title: 'Résultats enregistrés !', description: 'Votre performance a été sauvegardée.' });
+          toast({ 
+              title: navigator.onLine ? 'Résultats enregistrés !' : 'Mode hors-ligne actif', 
+              description: navigator.onLine ? 'Votre performance a été sauvegardée.' : 'Vos résultats seront synchronisés dès le retour de la connexion.' 
+          });
         }
     } catch(error) {
         console.error("Failed to save attempt", error);
@@ -205,7 +223,7 @@ function TakeQuizComponent() {
       setLoading(true);
       const quizIdParam = searchParams.get('id');
       const sourceParam = searchParams.get('source');
-      const isOffline = !navigator.onLine;
+      const isCurrentlyOffline = !navigator.onLine;
   
       let loadedQuizData: Quiz | null = null;
   
@@ -216,11 +234,13 @@ function TakeQuizComponent() {
             loadedQuizData = JSON.parse(quizDataString);
           }
         } else if (quizIdParam) {
-          if (isOffline) {
+          // Attempt local load first if offline, or sync if online
+          if (isCurrentlyOffline) {
             loadedQuizData = await getQuizLocally(quizIdParam);
           } else {
             const allQuizzes = await getQuizzesFromFirestore();
             loadedQuizData = allQuizzes.find(q => q.id === quizIdParam) || null;
+            // Always update local cache when online
             if (loadedQuizData) {
               await saveQuizLocally(loadedQuizData);
             }
@@ -237,7 +257,11 @@ function TakeQuizComponent() {
           let duration = activeQuiz.duration_minutes || activeQuiz.questions.length;
           setTimeLeft(duration * 60);
         } else {
-          toast({ title: 'Erreur', description: 'Le quiz est invalide ou introuvable.', variant: 'destructive' });
+          toast({ 
+              title: 'Quiz indisponible', 
+              description: isCurrentlyOffline ? 'Veuillez vous connecter au moins une fois pour télécharger ce quiz.' : 'Le quiz est introuvable.', 
+              variant: 'destructive' 
+          });
           router.push('/dashboard/quizzes');
         }
       } catch (error) {
@@ -447,7 +471,10 @@ function TakeQuizComponent() {
                   </Button>
                   <div>
                       <h2 className="font-black text-lg gradient-text leading-none mb-1">{quiz.title}</h2>
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Question {currentQuestionIndex + 1} sur {quiz.questions.length}</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                        Question {currentQuestionIndex + 1} sur {quiz.questions.length}
+                        {isOffline && <Badge variant="secondary" className="h-4 text-[8px] bg-green-100 text-green-700 px-1"><WifiOff className="w-2 h-2 mr-0.5"/> Offline</Badge>}
+                      </p>
                   </div>
               </div>
               <div className={cn(
