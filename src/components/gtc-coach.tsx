@@ -2,13 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  BrainCircuit, 
+  Sparkles, 
   Send, 
   X, 
   Minus, 
   Maximize2, 
   Loader2, 
-  Sparkles, 
   User,
   Bot
 } from 'lucide-react';
@@ -82,7 +81,7 @@ export default function GTCCoach() {
         className="fixed bottom-24 lg:bottom-6 right-6 z-[60] w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 shadow-2xl hover:scale-110 transition-transform duration-300 group p-0 overflow-hidden border-4 border-white/20"
       >
         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <BrainCircuit className="w-7 h-7 text-white animate-pulse" />
+        <Sparkles className="w-7 h-7 text-white animate-pulse" />
         <span className="absolute -top-1 -right-1 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-4 w-4 bg-pink-500"></span>
@@ -100,7 +99,7 @@ export default function GTCCoach() {
         <CardHeader className="p-4 bg-gradient-to-r from-indigo-600 to-purple-700 text-white flex flex-row items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30">
-                <BrainCircuit className="w-6 h-6 text-white" />
+                <Sparkles className="w-6 h-6 text-white" />
              </div>
              <div>
                 <CardTitle className="text-base font-bold">Coach GTC</CardTitle>
