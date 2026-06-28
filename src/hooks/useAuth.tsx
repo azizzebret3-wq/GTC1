@@ -106,12 +106,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [fetchUserData]);
 
+  // Modified reloadUserData to NOT trigger the global loading state
+  // This prevents UI unmounting during data refreshes
   const reloadUserData = useCallback(async () => {
     if (user) {
-      setLoading(true);
       const data = await fetchUserData(user);
       setUserData(data);
-      setLoading(false);
     }
   }, [user, fetchUserData]);
   
