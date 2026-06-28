@@ -22,10 +22,12 @@ import {
   Video,
   Shuffle,
   Lock,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { getQuizzesFromFirestore, Quiz, getAttemptsFromFirestore, Attempt, getDocumentsFromFirestore, LibraryDocument } from "@/lib/firestore.service";
@@ -99,6 +101,11 @@ export default function Dashboard() {
   const isPremium = userData?.subscription_type === 'premium';
   const isAdmin = userData?.role === 'admin';
   const canAccessPremium = isPremium || isAdmin;
+
+  const currentLevel = userData?.level || 1;
+  const currentXp = userData?.xp || 0;
+  const xpForNextLevel = currentLevel * 1000;
+  const progressValue = (currentXp % 1000) / 10;
 
   const handleQuickPractice = () => {
     if (!canAccessPremium) {
@@ -185,7 +192,7 @@ export default function Dashboard() {
           }
         `}</style>
         
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl sm:text-4xl font-black gradient-text">
@@ -194,31 +201,24 @@ export default function Dashboard() {
             <div className="text-3xl animate-bounce">🚀</div>
           </div>
           <p className="text-base sm:text-lg text-muted-foreground font-medium">
-            {isAdmin ? "Interface d'administration prête." : "C'est le moment de briller !"}
+            C'est le moment de briller et de grimper au sommet !
           </p>
         </div>
-        
-        {!isPremium && !isAdmin && (
-          <Link href="/dashboard/premium" className="w-full lg:w-auto">
-            <Card className="card-stat glassmorphism border-2 border-yellow-400/50 shadow-xl overflow-hidden group">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Crown className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-yellow-800 dark:text-yellow-300">Passer Premium</h3>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-400">Accès illimité débloqué</p>
-                  </div>
-                  <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-bold shadow-lg ml-auto hidden sm:flex">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Activer
-                  </Button>
+
+        {/* XP & Level Badge */}
+        <Card className="glassmorphism p-4 border-l-4 border-l-purple-500 shadow-lg min-w-[240px] hover-lift">
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
+                        <Star className="w-5 h-5 text-purple-600 fill-current" />
+                    </div>
+                    <span className="font-black text-purple-700 dark:text-purple-300">Niveau {currentLevel}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        )}
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{currentXp % 1000} / 1000 XP</span>
+            </div>
+            <Progress value={progressValue} className="h-2" />
+            <p className="text-[9px] font-bold text-muted-foreground mt-2 text-center uppercase tracking-widest">Encore {1000 - (currentXp % 1000)} XP avant le niveau {currentLevel + 1}</p>
+        </Card>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
@@ -280,7 +280,7 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">Une session intensive générée aléatoirement pour maintenir vos réflexes à jour.</p>
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">Une session intensive générée aléatoirement pour maintenir vos réflexes à jour et gagner un maximum d'XP.</p>
                <Button 
                 onClick={handleQuickPractice}
                 size="lg"
@@ -397,7 +397,7 @@ export default function Dashboard() {
                       <div className="min-w-0">
                         <p className="font-bold text-sm text-foreground truncate">{attempt.quizTitle}</p>
                         <p className="text-[10px] text-muted-foreground font-medium mt-0.5">
-                          {format(new Date(attempt.createdAt), 'dd MMM', { locale: fr })} • {attempt.correctAnswers}/{attempt.totalQuestions} pts
+                          {format(new Date(attempt.createdAt), 'dd MMM', { locale: fr })} • +{attempt.xpEarned || 0} XP
                         </p>
                       </div>
                       <div className={`text-xl font-black ml-3 ${

@@ -1,6 +1,7 @@
+
 // src/lib/firestore.service.ts
 import { db } from './firebase';
-import { collection, addDoc, getDocs, QueryDocumentSnapshot, DocumentData, Timestamp, doc, updateDoc, query, where, orderBy, deleteDoc, serverTimestamp, getDoc, writeBatch, limit } from 'firebase/firestore';
+import { collection, addDoc, getDocs, QueryDocumentSnapshot, DocumentData, Timestamp, doc, updateDoc, query, where, orderBy, deleteDoc, serverTimestamp, getDoc, writeBatch, limit, increment } from 'firebase/firestore';
 
 // Define the structure of a Quiz document
 export interface QuizQuestion {
@@ -37,6 +38,8 @@ export interface AppUser {
   subscription_tier?: 'mensuel' | 'annuel';
   subscription_expires_at?: Date | Timestamp | null;
   photoURL?: string;
+  xp?: number;
+  level?: number;
 }
 
 // Define the structure of an Attempt document
@@ -50,6 +53,7 @@ export interface Attempt {
     percentage: number;
     correctAnswers: number;
     createdAt: Date;
+    xpEarned?: number;
 }
 
 // Define the structure of a Library Document
@@ -59,16 +63,14 @@ export interface LibraryDocument {
   type: 'pdf' | 'video';
   access_type: 'gratuit' | 'premium';
   category: string;
-  url: string; // URL to the file in Firebase Storage
+  url: string; 
   createdAt: Date;
 }
 
 export type LibraryDocumentFormData = Omit<LibraryDocument, 'id' | 'createdAt'>;
 
-// Type for creating a new quiz. `id` and `createdAt` are handled by Firestore.
 export type NewQuizData = Omit<Quiz, 'id' | 'createdAt'>;
 
-// Structure for a Training Path
 export interface TrainingPath {
   id: string;
   title: string;
@@ -79,13 +81,12 @@ export interface TrainingPath {
   progress: number;
 }
 
-// Structure for Notifications
 export interface AppNotification {
   id: string;
-  userId: string; // The user who receives the notification
+  userId: string;
   title: string;
   description: string;
-  href: string; // Link to navigate to
+  href: string;
   isRead: boolean;
   createdAt: Date;
 }
@@ -103,7 +104,6 @@ export const deleteQuizFromFirestore = async (quizId: string) => {
 export const updateQuizInFirestore = async (quizId: string, quizData: Partial<Quiz>) => {
     try {
         const quizDocRef = doc(db, 'quizzes', quizId);
-        // Ensure createdAt is not overwritten by removing it from the update object
         const { createdAt, ...restOfData } = quizData;
         await updateDoc(quizDocRef, { ...restOfData });
     } catch (e) {
@@ -122,15 +122,12 @@ export const saveQuizToFirestore = async (quizData: NewQuizData) => {
     
     const docRef = await addDoc(collection(db, "quizzes"), {
         ...quizDataToSave,
-        createdAt: serverTimestamp() // Use server-side timestamp for consistency
+        createdAt: serverTimestamp()
     });
-    console.log("Quiz document written with ID: ", docRef.id);
 
-    // After successfully saving the quiz, notify all users.
     try {
       await notifyAllUsersOfNewQuiz(quizData.title, docRef.id, !!quizData.isMockExam);
     } catch (notificationError) {
-      // Log the error but don't fail the whole operation if notifications fail.
       console.error("Failed to send new quiz notifications:", notificationError);
     }
 
@@ -142,15 +139,13 @@ export const saveQuizToFirestore = async (quizData: NewQuizData) => {
 };
 
 const parseFirestoreDate = (dateField: any): Date => {
-  if (!dateField) return new Date(); // Fallback to now if null/undefined
+  if (!dateField) return new Date();
   if (dateField instanceof Timestamp) {
     return dateField.toDate();
   }
-  // This handles the case where the data is serialized from server components
   if (dateField.seconds) {
     return new Timestamp(dateField.seconds, dateField.nanoseconds).toDate();
   }
-  // This handles cases where it might already be a Date object or a string
   return new Date(dateField);
 }
 
@@ -201,7 +196,6 @@ export const getAdminUserId = async (): Promise<string | null> => {
     }
     return null;
   } catch (error) {
-    console.warn("Could not query for admin user, probably because index is not ready.", error);
     return null;
   }
 }
@@ -232,7 +226,6 @@ export const updateUserSubscriptionInFirestore = async (uid: string, subscriptio
             }
             updateData.subscription_tier = subscription.tier || undefined;
         } else {
-            // If setting to 'gratuit', clear expiry and tier
             updateData.subscription_expires_at = null;
             updateData.subscription_tier = null;
         }
@@ -247,6 +240,25 @@ export const updateUserSubscriptionInFirestore = async (uid: string, subscriptio
 export const saveAttemptToFirestore = async (attemptData: Omit<Attempt, 'id'>) => {
     try {
         const docRef = await addDoc(collection(db, "attempts"), attemptData);
+        
+        // Update user XP
+        const userDocRef = doc(db, 'users', attemptData.userId);
+        const xpToGain = attemptData.xpEarned || 0;
+        
+        await updateDoc(userDocRef, {
+            xp: increment(xpToGain)
+        });
+
+        // Check if level needs update (simplified logic: 1000 XP per level)
+        const userSnap = await getDoc(userDocRef);
+        if (userSnap.exists()) {
+            const currentXp = userSnap.data().xp || 0;
+            const newLevel = Math.floor(currentXp / 1000) + 1;
+            if (newLevel !== (userSnap.data().level || 1)) {
+                await updateDoc(userDocRef, { level: newLevel });
+            }
+        }
+
         return docRef.id;
     } catch (e) {
         console.error("Error saving attempt: ", e);
@@ -269,7 +281,6 @@ export const getAttemptsFromFirestore = async (userId: string): Promise<Attempt[
         });
     } catch (e) {
         console.error("Error getting attempts: ", e);
-        // Don't throw, just return empty array if index is building
         return [];
     }
 };
@@ -348,15 +359,12 @@ export const createNotification = async (notificationData: Omit<AppNotification,
         });
     } catch (e) {
         console.error("Error creating notification: ", e);
-        // Do not throw an error to the user, just log it.
-        // This is a background task and should not block the user's flow.
     }
 };
 
 const notifyAllUsersOfNewQuiz = async (quizTitle: string, quizId: string, isMockExam: boolean) => {
   try {
     const users = await getUsersFromFirestore();
-    // We don't want to notify admins.
     const nonAdminUsers = users.filter(user => user.role !== 'admin');
 
     if (nonAdminUsers.length === 0) {
@@ -371,7 +379,7 @@ const notifyAllUsersOfNewQuiz = async (quizTitle: string, quizId: string, isMock
     const href = isMockExam ? `/dashboard/mock-exams` : `/dashboard/take-quiz?id=${quizId}`;
 
     nonAdminUsers.forEach(user => {
-      const newNotifRef = doc(notificationsCollection); // Create a new doc reference with an auto-generated ID
+      const newNotifRef = doc(notificationsCollection);
       batch.set(newNotifRef, {
         userId: user.uid,
         title,
@@ -383,11 +391,8 @@ const notifyAllUsersOfNewQuiz = async (quizTitle: string, quizId: string, isMock
     });
 
     await batch.commit();
-    console.log(`Sent notifications to ${nonAdminUsers.length} users for new quiz.`);
-
   } catch (error) {
     console.error("Error sending notifications to all users:", error);
-    // Don't re-throw, as this is a non-critical background task.
   }
 };
 
@@ -439,7 +444,6 @@ export const markAllNotificationsAsRead = async (userId: string) => {
     }
 }
 
-// Add a function to get a single user by ID to find who the admin is
 export async function getUser(uid: string): Promise<AppUser | null> {
   const userDoc = await getDoc(doc(db, `users/${uid}`));
   if (userDoc.exists()) {

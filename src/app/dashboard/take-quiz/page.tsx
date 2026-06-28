@@ -26,7 +26,8 @@ import {
   ChevronRight,
   ChevronLeft,
   BookOpen,
-  WifiOff
+  WifiOff,
+  Star
 } from 'lucide-react';
 import { getQuizzesFromFirestore, Quiz, saveAttemptToFirestore } from '@/lib/firestore.service';
 import { useToast } from '@/hooks/use-toast';
@@ -46,7 +47,7 @@ type QuestionResult = {
   explanation?: string;
 };
 
-const EncouragementCard = ({ score, total }: { score: number; total: number }) => {
+const EncouragementCard = ({ score, total, xp }: { score: number; total: number, xp: number }) => {
   const percentage = total > 0 ? (score / total) * 100 : 0;
   let title = '';
   let message = '';
@@ -77,7 +78,11 @@ const EncouragementCard = ({ score, total }: { score: number; total: number }) =
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-lg font-medium opacity-90 leading-relaxed">{message}</p>
+        <p className="text-lg font-medium opacity-90 leading-relaxed mb-4">{message}</p>
+        <div className="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 w-fit">
+            <Star className="w-5 h-5 text-yellow-300 fill-current" />
+            <span className="font-black">+{xp} XP gagnés !</span>
+        </div>
       </CardContent>
     </Card>
   );
@@ -136,7 +141,7 @@ function TakeQuizComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, reloadUserData } = useAuth();
   
   const [quiz, setQuiz] = useState<ActiveQuiz | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -146,6 +151,7 @@ function TakeQuizComponent() {
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
+  const [xpEarned, setXpEarned] = useState(0);
 
   useEffect(() => {
     const handleOnlineStatus = () => setIsOffline(!navigator.onLine);
@@ -193,10 +199,13 @@ function TakeQuizComponent() {
 
     const score = newResults.filter(r => r.isCorrect).length;
     const totalQuestions = quiz.questions.length;
+    const baseXP = score * 50;
+    const bonusXP = score === totalQuestions ? 200 : 0;
+    const finalXP = baseXP + bonusXP;
+    setXpEarned(finalXP);
     
     try {
       if (quizSource !== 'generated' && quizSource !== 'quick-practice') {
-           // Firestore persistence will queue this for upload when online
            await saveAttemptToFirestore({
               userId: user.uid,
               quizId: quiz.id,
@@ -206,17 +215,21 @@ function TakeQuizComponent() {
               percentage: Math.round((score / totalQuestions) * 100),
               correctAnswers: score,
               createdAt: new Date(),
+              xpEarned: finalXP,
           });
+          
+          await reloadUserData(); // Refresh XP/Level in sidebar/header
+
           toast({ 
               title: navigator.onLine ? 'Résultats enregistrés !' : 'Mode hors-ligne actif', 
-              description: navigator.onLine ? 'Votre performance a été sauvegardée.' : 'Vos résultats seront synchronisés dès le retour de la connexion.' 
+              description: navigator.onLine ? `Vous avez gagné ${finalXP} XP !` : 'Vos résultats et XP seront synchronisés dès le retour de la connexion.' 
           });
         }
     } catch(error) {
         console.error("Failed to save attempt", error);
         toast({ title: 'Erreur', description: "Impossible d'enregistrer vos résultats.", variant: 'destructive' });
     }
-  }, [quiz, user, searchParams, userAnswers, toast, quizFinished, router]);
+  }, [quiz, user, searchParams, userAnswers, toast, quizFinished, router, reloadUserData]);
 
   useEffect(() => {
     const loadQuiz = async () => {
@@ -234,13 +247,11 @@ function TakeQuizComponent() {
             loadedQuizData = JSON.parse(quizDataString);
           }
         } else if (quizIdParam) {
-          // Attempt local load first if offline, or sync if online
           if (isCurrentlyOffline) {
             loadedQuizData = await getQuizLocally(quizIdParam);
           } else {
             const allQuizzes = await getQuizzesFromFirestore();
             loadedQuizData = allQuizzes.find(q => q.id === quizIdParam) || null;
-            // Always update local cache when online
             if (loadedQuizData) {
               await saveQuizLocally(loadedQuizData);
             }
@@ -381,7 +392,7 @@ function TakeQuizComponent() {
         {/* Grille de stats secondaires */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {quiz.isMockExam && <RankingCard score={score} totalQuestions={quiz.questions.length} />}
-            <EncouragementCard score={score} total={quiz.questions.length} />
+            <EncouragementCard score={score} total={quiz.questions.length} xp={xpEarned} />
         </div>
         
         {/* Correction Détaillée */}

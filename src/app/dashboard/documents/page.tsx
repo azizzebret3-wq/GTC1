@@ -1,3 +1,4 @@
+
 // src/app/dashboard/documents/page.tsx
 'use client';
 
@@ -12,6 +13,8 @@ import {
   FileText,
   Video,
   Loader,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +29,16 @@ import {
 } from "@/components/ui/select"
 import { useToast } from '@/hooks/use-toast';
 import { LibraryDocument, getDocumentsFromFirestore } from '@/lib/firestore.service';
+import { summarizeTrainingContent } from '@/ai/flows/summarize-training-content';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import MathText from '@/components/math-text';
 
 export default function DocumentsPage() {
   const { userData } = useAuth();
@@ -41,6 +52,10 @@ export default function DocumentsPage() {
     category: 'all',
     type: 'all',
   });
+
+  const [summary, setSummary] = useState<string | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState<string | null>(null);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
 
    useEffect(() => {
     const fetchDocuments = async () => {
@@ -65,6 +80,19 @@ export default function DocumentsPage() {
     setFilters(prev => ({ ...prev, [type]: value }));
   };
 
+  const handleSummarize = async (doc: LibraryDocument) => {
+    setIsSummarizing(doc.id);
+    try {
+        const result = await summarizeTrainingContent({ documentUrl: doc.url });
+        setSummary(result.summary);
+        setIsSummaryOpen(true);
+    } catch (e) {
+        toast({ title: 'Erreur', description: 'Impossible de générer le résumé.', variant: 'destructive' });
+    } finally {
+        setIsSummarizing(null);
+    }
+  }
+
   const filteredDocuments = documents.filter(doc => {
     return (
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -75,6 +103,7 @@ export default function DocumentsPage() {
   
   const isPremium = userData?.subscription_type === 'premium';
   const isAdmin = userData?.role === 'admin';
+  const canAccessPremium = isPremium || isAdmin;
   
   const categories = ['all', ...Array.from(new Set(documents.map(d => d.category)))];
 
@@ -158,9 +187,23 @@ export default function DocumentsPage() {
                     <h3 className="text-base font-bold text-gray-900 group-hover:text-purple-600 transition-colors mb-2">
                       {doc.title}
                     </h3>
-                    <Badge variant="outline" className="text-xs font-semibold capitalize">
-                      {doc.category}
-                    </Badge>
+                    <div className="flex items-center justify-between mt-auto">
+                        <Badge variant="outline" className="text-xs font-semibold capitalize">
+                            {doc.category}
+                        </Badge>
+                        {doc.type === 'pdf' && (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 text-xs text-primary font-bold hover:bg-primary/10"
+                                onClick={() => canAccessPremium ? handleSummarize(doc) : router.push('/dashboard/premium')}
+                                disabled={isSummarizing === doc.id}
+                            >
+                                {isSummarizing === doc.id ? <Loader className="w-3 h-3 animate-spin mr-1"/> : <Sparkles className="w-3 h-3 mr-1"/>}
+                                Résumer
+                            </Button>
+                        )}
+                    </div>
                   </CardContent>
                   <Button 
                       className={`w-full font-bold text-white rounded-t-none h-12 text-sm ${
@@ -204,6 +247,26 @@ export default function DocumentsPage() {
           )}
         </>
       )}
+
+      {/* Summary Dialog */}
+      <Dialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-2xl font-black gradient-text">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                    Résumé Express par l'IA
+                </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto pr-2 py-4">
+                <div className="bg-muted/30 p-6 rounded-2xl border-2 border-primary/10 leading-relaxed text-foreground">
+                    {summary && <MathText text={summary} />}
+                </div>
+            </div>
+            <div className="pt-4 border-t flex justify-end">
+                <Button onClick={() => setIsSummaryOpen(false)} className="rounded-xl font-bold">Fermer</Button>
+            </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
