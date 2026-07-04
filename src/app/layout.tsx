@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 'use client';
 
 import './globals.css';
@@ -8,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import React, { useEffect, useState } from 'react';
 import { AuthProvider } from '@/firebase/provider';
 import OfflineNotice from '@/components/OfflineNotice';
+import Script from 'next/script';
 
 const APP_NAME = "Gagne ton concours";
 const APP_DESCRIPTION = "La plateforme la plus moderne et interactive pour réussir tes concours directs et professionnels.";
@@ -43,6 +43,9 @@ export default function RootLayout({
         <link rel="icon" href="/icons/gtc-logo.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
+        
+        {/* Puter.js pour l'IA sans serveur */}
+        <Script src="https://js.puter.com/v2/" strategy="beforeInteractive" />
       </head>
       <body className="font-body antialiased">
         {isClient ? (

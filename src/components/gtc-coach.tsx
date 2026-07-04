@@ -10,13 +10,13 @@ import {
   Loader2, 
   User,
   Bot,
-  BrainCircuit
+  BrainCircuit,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth.tsx';
-import { askCoach } from '@/ai/flows/gtc-coach-flow';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -33,7 +33,7 @@ export default function GTCCoach() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: `Salut ${userData?.fullName?.split(' ')[0] || 'Champion'} ! Je suis ton Coach GTC. Prêt à décrocher ton concours aujourd'hui ? 🚀` }
+    { role: 'model', content: `Salut ${userData?.fullName?.split(' ')[0] || 'Champion'} ! Je suis ton Coach GTC alimenté par Puter.js. Prêt à tester la puissance de l'IA en direct ? 🚀` }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -56,21 +56,37 @@ export default function GTCCoach() {
     setIsLoading(true);
 
     try {
-      const result = await askCoach({
-        message: userMessage,
-        userContext: {
-          fullName: userData?.fullName,
-          competitionType: userData?.competitionType,
-          averageScore: 75,
-          completedQuizzes: 12,
-          level: userData?.level || 1,
-        },
-        history: messages,
-      });
+      // @ts-ignore - Puter est chargé globalement via script
+      const puter = window.puter;
+      
+      if (!puter) {
+        throw new Error("Puter.js n'est pas encore chargé.");
+      }
 
-      setMessages(prev => [...prev, { role: 'model', content: result.response }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', content: "Désolé, j'ai une petite perte de connexion. On peut reprendre ? 🙏" }]);
+      // Construction du prompt système pour Puter
+      const systemPrompt = `Tu es "Coach GTC", le mentor n°1 pour la réussite aux concours d'État au Burkina Faso. 
+      L'étudiant s'appelle ${userData?.fullName || 'inconnu'}. 
+      Type de concours : ${userData?.competitionType || 'Général'}.
+      Niveau de Prestige actuel : ${userData?.level || 1}/5.
+      
+      Réponds de manière professionnelle, stratégique et motivante. Utilise des expressions locales si pertinent (ENA, ENSEP, etc.). 
+      Si tu utilises des mathématiques, utilise les délimiteurs $ pour l'inline et $$ pour les blocs.`;
+
+      const response = await puter.ai.chat(
+        `${systemPrompt}\n\nUtilisateur: ${userMessage}`,
+        { 
+            model: "google/gemini-1.5-flash",
+            stream: false 
+        }
+      );
+
+      // Puter v2 retourne souvent la réponse directement ou dans un champ text
+      const content = typeof response === 'string' ? response : (response.message?.content || response.text || "J'ai reçu votre message mais je n'ai pas pu formuler de réponse.");
+
+      setMessages(prev => [...prev, { role: 'model', content: content }]);
+    } catch (error: any) {
+      console.error("Erreur Puter AI:", error);
+      setMessages(prev => [...prev, { role: 'model', content: `Désolé, une erreur est survenue avec Puter.js : ${error.message || "Connexion perdue"}.` }]);
     } finally {
       setIsLoading(false);
     }
@@ -98,16 +114,16 @@ export default function GTCCoach() {
       isMinimized ? "w-72" : "w-80 sm:w-96"
     )}>
       <Card className="glassmorphism shadow-2xl border-primary/20 overflow-hidden flex flex-col w-full h-[550px] max-h-[75vh]">
-        <CardHeader className="p-4 bg-gradient-to-r from-indigo-600 via-purple-700 to-pink-600 text-white flex flex-row items-center justify-between shrink-0">
+        <CardHeader className="p-4 bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-600 text-white flex flex-row items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30">
                 <Sparkles className="w-6 h-6 text-white" />
              </div>
              <div>
-                <CardTitle className="text-base font-black tracking-tight">Expert Coach GTC</CardTitle>
+                <CardTitle className="text-base font-black tracking-tight">Coach GTC (Puter)</CardTitle>
                 <div className="flex items-center gap-1.5">
                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                   <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">IA Stratégique</span>
+                   <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">Test Mode Actif</span>
                 </div>
              </div>
           </div>
@@ -134,8 +150,7 @@ export default function GTCCoach() {
                       <Avatar className="h-9 w-9 shrink-0 border-2 border-white/50 shadow-md">
                         {msg.role === 'model' ? (
                           <>
-                            <AvatarImage src="/bot-avatar.png" />
-                            <AvatarFallback className="bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 text-white">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-500 text-white">
                               <Bot className="h-5 w-5" />
                             </AvatarFallback>
                           </>
@@ -151,7 +166,7 @@ export default function GTCCoach() {
                       <div className={cn(
                         "p-4 rounded-2xl text-sm leading-relaxed",
                         msg.role === 'user' 
-                          ? "bg-indigo-600 text-white rounded-tr-none shadow-lg shadow-indigo-500/20" 
+                          ? "bg-blue-600 text-white rounded-tr-none shadow-lg shadow-blue-500/20" 
                           : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-none border border-slate-200 dark:border-slate-700 shadow-sm"
                       )}>
                         <MathText text={msg.content} />
@@ -161,38 +176,45 @@ export default function GTCCoach() {
                   {isLoading && (
                     <div className="flex gap-3 mr-auto max-w-[90%]">
                        <Avatar className="h-9 w-9 shrink-0 border-2 border-white/50 shadow-md">
-                          <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white">
                             <Bot className="h-5 w-5" />
                           </AvatarFallback>
                        </Avatar>
                        <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-700 shadow-sm">
                           <div className="flex gap-1.5 items-center">
-                            <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
-                            <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                            <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0s'}}></div>
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
                           </div>
                        </div>
                     </div>
                   )}
                 </div>
               </ScrollArea>
+              
+              <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-950/20 border-t border-yellow-100 dark:border-yellow-900 flex items-center gap-2">
+                <AlertCircle className="w-3 h-3 text-yellow-600" />
+                <p className="text-[9px] font-bold text-yellow-700 dark:text-yellow-400 uppercase tracking-tighter">
+                    Puter.js peut demander une connexion lors de l'envoi.
+                </p>
+              </div>
             </CardContent>
 
             <CardFooter className="p-4 border-t bg-white dark:bg-slate-900 shrink-0">
                <div className="flex w-full gap-2 relative">
                   <Input 
-                    placeholder="Posez votre question stratégique..." 
+                    placeholder="Posez votre question (Puter IA)..." 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    className="flex-1 pr-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:ring-indigo-500"
+                    className="flex-1 pr-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:ring-blue-500"
                     disabled={isLoading}
                   />
                   <Button 
                     size="icon" 
                     onClick={handleSend} 
                     disabled={isLoading || !input.trim()}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-lg bg-indigo-600 hover:bg-indigo-700 h-10 w-10 shadow-lg"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-lg bg-blue-600 hover:bg-blue-700 h-10 w-10 shadow-lg"
                   >
                     <Send className="h-5 w-5" />
                   </Button>
@@ -201,13 +223,6 @@ export default function GTCCoach() {
           </>
         )}
       </Card>
-      
-      {isMinimized && (
-         <div className="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-full text-xs font-black shadow-xl flex items-center gap-2 animate-bounce border-2 border-white/20">
-            <Sparkles className="h-4 w-4" />
-            VOTRE COACH EST PRÊT !
-         </div>
-      )}
     </div>
   );
 }
