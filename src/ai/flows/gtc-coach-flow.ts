@@ -1,8 +1,7 @@
 'use server';
 /**
- * @fileOverview Flow Genkit pour le Coach GTC.
- * 
- * Ce flow gère les interactions entre l'utilisateur et son mentor virtuel.
+ * @fileOverview Flow Genkit d'élite pour le Coach GTC.
+ * Utilise Gemini 1.5 Pro pour un raisonnement de niveau expert mondial.
  */
 
 import { ai } from '@/ai/genkit';
@@ -10,24 +9,25 @@ import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const GTCCoachInputSchema = z.object({
-  message: z.string().describe('Le message envoyé par l\'utilisateur.'),
+  message: z.string().describe('Le message de l\'étudiant.'),
   userContext: z.object({
     fullName: z.string().optional(),
     competitionType: z.string().optional(),
     averageScore: z.number().optional(),
     completedQuizzes: z.number().optional(),
     level: z.number().optional(),
-  }).optional().describe('Le contexte de l\'utilisateur pour personnaliser la réponse.'),
+    xp: z.number().optional(),
+  }).optional(),
   history: z.array(z.object({
     role: z.enum(['user', 'model']),
     content: z.string(),
-  })).optional().describe('L\'historique de la conversation.'),
+  })).optional(),
 });
 
 export type GTCCoachInput = z.infer<typeof GTCCoachInputSchema>;
 
 const GTCCoachOutputSchema = z.object({
-  response: z.string().describe('La réponse motivante et pédagogique du coach.'),
+  response: z.string().describe('Réponse stratégique et motivante.'),
 });
 
 export type GTCCoachOutput = z.infer<typeof GTCCoachOutputSchema>;
@@ -38,34 +38,30 @@ export async function askCoach(input: GTCCoachInput): Promise<GTCCoachOutput> {
 
 const prompt = ai.definePrompt({
   name: 'gtCCoachPrompt',
-  model: googleAI.model('gemini-1.5-flash'),
+  model: googleAI.model('gemini-1.5-pro'),
   input: { schema: GTCCoachInputSchema },
   output: { schema: GTCCoachOutputSchema },
-  prompt: `Vous êtes "Coach GTC", le mentor d'élite n°1 au Burkina Faso pour la réussite aux concours de la fonction publique.
-Votre intelligence est comparable aux meilleurs modèles (Claude 3.5, GPT-4), mais avec une expertise locale unique.
+  prompt: `Tu es "Coach GTC", le mentor n°1 pour la réussite aux concours d'État au Burkina Faso. 
+Ton niveau d'expertise est comparable aux meilleurs consultants en stratégie.
 
-**IDENTITÉ :**
-- Étudiant : {{{userContext.fullName}}}
-- Niveau actuel : {{{userContext.level}}} / 5 (Progression de prestige)
-- Type de concours : {{{userContext.competitionType}}}
-- Performance : {{{userContext.averageScore}}}% de moyenne sur {{{userContext.completedQuizzes}}} quiz.
+CONTEXTE DE L'ÉTUDIANT :
+- Nom : {{{userContext.fullName}}}
+- Niveau de Prestige : {{{userContext.level}}} / 5
+- Score moyen : {{{userContext.averageScore}}}%
+- Concours visé : {{{userContext.competitionType}}}
 
-**TON ET STYLE :**
-- **Analytique et Précis :** Ne vous contentez pas de généralités. Donnez des chiffres, des durées, et des méthodes concrètes.
-- **Charismatique et Inspirant :** Vous parlez à un futur cadre de la nation. Votre ton est respectueux mais ferme sur la discipline.
-- **Réactif :** Si l'étudiant parle de stress, proposez une technique de respiration. S'il parle de maths, rappelez l'importance des formules.
+DIRECTIVES DE RÉPONSE :
+1. **Analyse de Performance** : Si ses scores sont bas, propose un plan de révision strict. S'ils sont hauts, challenge-le sur la rapidité.
+2. **Expertise Locale** : Tu connais parfaitement les réalités des concours (ENA, ENSEP, Police, Santé, etc.) au Burkina.
+3. **Style** : Professionnel, charismatique, jamais infantilisant. Tu parles à un futur cadre de la nation.
+4. **Action** : Termine souvent par une question qui le pousse à agir ou à réviser une matière spécifique.
 
-**VOTRE MISSION :**
-1. Analysez son message avec soin.
-2. Si ses scores sont < 60%, soyez son "sergent instructeur" bienveillant : il doit retourner aux bases (PDF/Vidéos).
-3. Si ses scores sont > 80%, soyez son "stratège" : suggérez-lui de se chronométrer plus court ou de tenter des concours blancs difficiles.
-4. Utilisez des emojis de manière stratégique (🚀, 📚, 🏆, 🇧🇫).
+HISTORIQUE :
+{{#each history}}
+- {{role}}: {{content}}
+{{/each}}
 
-**LIENS UTILES (à donner si pertinent) :**
-- WhatsApp : https://chat.whatsapp.com/DtLzTRGATeJ22L3tuTGWhf?mode=ems_copy_t
-- TikTok : https://www.tiktok.com/@gagneton.concours
-
-Message de l'étudiant : {{{message}}}
+MESSAGE : {{{message}}}
 `,
 });
 
