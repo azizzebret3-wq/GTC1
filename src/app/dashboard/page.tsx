@@ -1,8 +1,6 @@
-
-// src/app/dashboard/page.tsx
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from '@/hooks/useAuth.tsx';
 import { 
@@ -33,6 +31,7 @@ import { fr } from "date-fns/locale";
 import { getQuizzesFromFirestore, Quiz, getAttemptsFromFirestore, Attempt, getDocumentsFromFirestore, LibraryDocument } from "@/lib/firestore.service";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+import { getXpRangeForLevel } from "@/firebase/provider";
 
 
 export default function Dashboard() {
@@ -102,10 +101,25 @@ export default function Dashboard() {
   const isAdmin = userData?.role === 'admin';
   const canAccessPremium = isPremium || isAdmin;
 
-  const currentLevel = userData?.level || 1;
-  const currentXp = userData?.xp || 0;
-  const xpForNextLevel = currentLevel * 1000;
-  const progressValue = (currentXp % 1000) / 10;
+  // Calcul de la progression de prestige (Rare)
+  const prestigeProgress = useMemo(() => {
+    if (!userData) return { level: 1, currentXp: 0, min: 0, max: 2500, percent: 0 };
+    const level = userData.level || 1;
+    const xp = userData.xp || 0;
+    const range = getXpRangeForLevel(level);
+    
+    const xpInLevel = xp - range.minXp;
+    const percent = Math.min(100, Math.max(0, (xpInLevel / range.requiredForNext) * 100));
+    
+    return {
+        level,
+        currentXp: xp,
+        min: range.minXp,
+        max: range.maxXp,
+        percent: Math.round(percent),
+        remaining: range.maxXp - xp
+    };
+  }, [userData]);
 
   const handleQuickPractice = () => {
     if (!canAccessPremium) {
@@ -205,19 +219,24 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* XP & Level Badge */}
-        <Card className="glassmorphism p-4 border-l-4 border-l-purple-500 shadow-lg min-w-[240px] hover-lift">
+        {/* XP & Prestige Level Badge */}
+        <Card className="glassmorphism p-4 border-l-4 border-l-purple-500 shadow-lg min-w-[280px] hover-lift">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
                         <Star className="w-5 h-5 text-purple-600 fill-current" />
                     </div>
-                    <span className="font-black text-purple-700 dark:text-purple-300">Niveau {currentLevel}</span>
+                    <span className="font-black text-purple-700 dark:text-purple-300">Niveau {prestigeProgress.level} de Prestige</span>
                 </div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">{currentXp % 1000} / 1000 XP</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{prestigeProgress.currentXp} XP totaux</span>
             </div>
-            <Progress value={progressValue} className="h-2" />
-            <p className="text-[9px] font-bold text-muted-foreground mt-2 text-center uppercase tracking-widest">Encore {1000 - (currentXp % 1000)} XP avant le niveau {currentLevel + 1}</p>
+            <Progress value={prestigeProgress.percent} className="h-2" />
+            <p className="text-[9px] font-bold text-muted-foreground mt-2 text-center uppercase tracking-widest">
+                {prestigeProgress.remaining > 0 
+                  ? `Encore ${prestigeProgress.remaining} XP avant le niveau ${prestigeProgress.level + 1}`
+                  : 'Niveau Maximum atteint ! 👑'
+                }
+            </p>
         </Card>
       </div>
 
