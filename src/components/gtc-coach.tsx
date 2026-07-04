@@ -33,7 +33,7 @@ export default function GTCCoach() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: `Salut ${userData?.fullName?.split(' ')[0] || 'Champion'} ! Je suis ton Coach GTC alimenté par Puter.js. Prêt à tester la puissance de l'IA en direct ? 🚀` }
+    { role: 'model', content: `Salut ${userData?.fullName?.split(' ')[0] || 'Champion'} ! Je suis ton Coach GTC alimenté par Gemini 3.5. Prêt à tester la puissance de l'IA en direct ? 🚀` }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -56,14 +56,14 @@ export default function GTCCoach() {
     setIsLoading(true);
 
     try {
-      // @ts-ignore - Puter est chargé globalement via script
+      // @ts-ignore - Puter est chargé globalement via script dans layout.tsx
       const puter = window.puter;
       
       if (!puter) {
         throw new Error("Puter.js n'est pas encore chargé.");
       }
 
-      // Construction du prompt système pour Puter
+      // Construction du prompt système
       const systemPrompt = `Tu es "Coach GTC", le mentor n°1 pour la réussite aux concours d'État au Burkina Faso. 
       L'étudiant s'appelle ${userData?.fullName || 'inconnu'}. 
       Type de concours : ${userData?.competitionType || 'Général'}.
@@ -75,12 +75,11 @@ export default function GTCCoach() {
       const response = await puter.ai.chat(
         `${systemPrompt}\n\nUtilisateur: ${userMessage}`,
         { 
-            model: "google/gemini-1.5-flash",
+            model: "google/gemini-3.5-flash",
             stream: false 
         }
       );
 
-      // Puter v2 retourne souvent la réponse directement ou dans un champ text
       const content = typeof response === 'string' ? response : (response.message?.content || response.text || "J'ai reçu votre message mais je n'ai pas pu formuler de réponse.");
 
       setMessages(prev => [...prev, { role: 'model', content: content }]);
@@ -113,17 +112,17 @@ export default function GTCCoach() {
       "fixed bottom-24 lg:bottom-6 right-6 z-[60] transition-all duration-300 ease-in-out flex flex-col items-end",
       isMinimized ? "w-72" : "w-80 sm:w-96"
     )}>
-      <Card className="glassmorphism shadow-2xl border-primary/20 overflow-hidden flex flex-col w-full h-[550px] max-h-[75vh]">
+      <Card className="glassmorphism shadow-xl border-primary/20 overflow-hidden flex flex-col w-full h-[550px] max-h-[75vh]">
         <CardHeader className="p-4 bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-600 text-white flex flex-row items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30">
                 <Sparkles className="w-6 h-6 text-white" />
              </div>
              <div>
-                <CardTitle className="text-base font-black tracking-tight">Coach GTC (Puter)</CardTitle>
+                <CardTitle className="text-base font-black tracking-tight">Coach GTC (Gemini 3.5)</CardTitle>
                 <div className="flex items-center gap-1.5">
                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                   <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">Test Mode Actif</span>
+                   <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">Connecté via Puter</span>
                 </div>
              </div>
           </div>
@@ -195,7 +194,7 @@ export default function GTCCoach() {
               <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-950/20 border-t border-yellow-100 dark:border-yellow-900 flex items-center gap-2">
                 <AlertCircle className="w-3 h-3 text-yellow-600" />
                 <p className="text-[9px] font-bold text-yellow-700 dark:text-yellow-400 uppercase tracking-tighter">
-                    Puter.js peut demander une connexion lors de l'envoi.
+                    Puter IA peut demander une connexion pour valider les crédits.
                 </p>
               </div>
             </CardContent>
@@ -203,7 +202,7 @@ export default function GTCCoach() {
             <CardFooter className="p-4 border-t bg-white dark:bg-slate-900 shrink-0">
                <div className="flex w-full gap-2 relative">
                   <Input 
-                    placeholder="Posez votre question (Puter IA)..." 
+                    placeholder="Posez votre question au coach..." 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}

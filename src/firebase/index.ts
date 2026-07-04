@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Point d'entrée principal pour Firebase dans l'application.
- * Gère l'initialisation et l'exportation des services essentiels.
+ * Fournit un accès simplifié aux instances configurées.
  */
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
@@ -16,24 +16,24 @@ let firestore: Firestore;
 
 if (getApps().length === 0) {
   firebaseApp = initializeApp(firebaseConfig);
-  auth = getAuth(firebaseApp);
-  firestore = getFirestore(firebaseApp);
-
-  if (typeof window !== 'undefined') {
-    enableMultiTabIndexedDbPersistence(firestore).catch((err) => {
-      if (err.code === 'failed-precondition') {
-        console.warn('Firestore persistence failed: multiple tabs open');
-      } else if (err.code === 'unimplemented') {
-        console.warn('Firestore persistence unimplemented');
-      }
-    });
-  }
 } else {
   firebaseApp = getApp();
-  auth = getAuth(firebaseApp);
-  firestore = getFirestore(firebaseApp);
+}
+
+auth = getAuth(firebaseApp);
+firestore = getFirestore(firebaseApp);
+
+// Activation de la persistance hors ligne
+if (typeof window !== 'undefined') {
+  enableMultiTabIndexedDbPersistence(firestore).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('Persistence failed: Multiple tabs open');
+    } else if (err.code === 'unimplemented') {
+      console.warn('Persistence unimplemented: Browser not supported');
+    }
+  });
 }
 
 export { firebaseApp, auth, firestore };
 export * from './provider';
-export * from './auth/use-user';
+export { useUser } from './auth/use-user';

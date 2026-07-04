@@ -33,9 +33,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 /**
  * Formule de progression de Prestige (Rare)
  * Niveau 1 : 0 - 2 500 XP
- * Niveau 2 : 2 500 - 10 000 XP (Besoin de 7 500)
- * Niveau 3 : 10 000 - 25 000 XP (Besoin de 15 000)
- * Niveau 4 : 25 000 - 55 000 XP (Besoin de 30 000)
+ * Niveau 2 : 2 500 - 10 000 XP
+ * Niveau 3 : 10 000 - 25 000 XP
+ * Niveau 4 : 25 000 - 55 000 XP
  * Niveau 5 : 55 000+ XP
  */
 export const getXpRangeForLevel = (level: number) => {
@@ -67,27 +67,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userDoc.exists()) {
         const data = userDoc.data();
         
-        // --- Vérification automatique de l'expiration de l'abonnement ---
+        // --- Vérification de l'expiration de l'abonnement ---
         let currentSubType = data.subscription_type || 'gratuit';
-        let currentSubTier = data.subscription_tier;
         let currentSubExpiry = data.subscription_expires_at;
 
         if (currentSubType === 'premium' && currentSubExpiry) {
           const expiryDate = currentSubExpiry instanceof Timestamp ? currentSubExpiry.toDate() : new Date(currentSubExpiry);
           if (new Date() > expiryDate) {
-            // L'abonnement a expiré
             await updateDoc(userDocRef, {
               subscription_type: 'gratuit',
               subscription_tier: null,
               subscription_expires_at: null
             });
             currentSubType = 'gratuit';
-            currentSubTier = null;
-            currentSubExpiry = null;
           }
         }
 
-        // --- Recalcul du niveau si nécessaire (basé sur la rareté) ---
+        // --- Recalcul du niveau ---
         const currentXp = data.xp || 0;
         const correctLevel = calculateLevelFromXp(currentXp);
         if (data.level !== correctLevel) {
@@ -103,8 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL: currentUser.photoURL || undefined,
           role: data.role,
           subscription_type: currentSubType,
-          subscription_tier: currentSubTier,
-          subscription_expires_at: currentSubExpiry,
+          subscription_tier: data.subscription_tier,
+          subscription_expires_at: data.subscription_expires_at,
           createdAt: data.createdAt,
           xp: currentXp,
           level: correctLevel,
