@@ -135,7 +135,7 @@ export default function GTCCoach() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 shadow-[0_10px_40px_rgba(79,70,229,0.4)] hover:scale-110 transition-all duration-300 group p-0 border-2 border-white/20"
+        className="fixed bottom-32 lg:bottom-6 right-6 z-[60] w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 shadow-[0_10px_40px_rgba(79,70,229,0.4)] hover:scale-110 transition-all duration-300 group p-0 border-2 border-white/20"
       >
         <MessageSquare className="w-6 h-6 text-white group-hover:rotate-12 transition-transform" />
         <span className="absolute -top-1 -right-1 flex h-4 w-4">
@@ -148,12 +148,12 @@ export default function GTCCoach() {
 
   return (
     <div className={cn(
-      "fixed bottom-0 right-0 lg:bottom-6 lg:right-6 z-[100] transition-all duration-500 ease-out flex flex-col items-end",
+      "fixed bottom-20 right-0 lg:bottom-6 lg:right-6 z-[100] transition-all duration-500 ease-out flex flex-col items-end",
       isMinimized ? "w-full sm:w-72" : "w-full sm:w-[400px]"
     )}>
       <Card className={cn(
         "glassmorphism shadow-2xl border-white/20 overflow-hidden flex flex-col w-full transition-all duration-300",
-        isMinimized ? "h-16 rounded-t-2xl lg:rounded-2xl" : "h-[100dvh] sm:h-[600px] sm:max-h-[80vh] rounded-t-3xl lg:rounded-3xl"
+        isMinimized ? "h-16 rounded-t-2xl lg:rounded-2xl" : "h-[80dvh] sm:h-[600px] sm:max-h-[80vh] rounded-t-3xl lg:rounded-3xl"
       )}>
         {/* Header Elite */}
         <CardHeader className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-900 text-white flex flex-row items-center justify-between shrink-0 border-b border-white/10">
