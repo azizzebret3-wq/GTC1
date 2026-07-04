@@ -32,18 +32,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * Formule de progression de Prestige (Rare)
- * Niveau 1 : 0 - 2 500 XP
- * Niveau 2 : 2 500 - 10 000 XP
- * Niveau 3 : 10 000 - 25 000 XP
- * Niveau 4 : 25 000 - 55 000 XP
- * Niveau 5 : 55 000+ XP
+ * Le passage au niveau supérieur est exponentiellement plus difficile.
  */
 export const getXpRangeForLevel = (level: number) => {
-    if (level === 1) return { minXp: 0, maxXp: 2500, requiredForNext: 2500 };
+    if (level <= 1) return { minXp: 0, maxXp: 2500, requiredForNext: 2500 };
     if (level === 2) return { minXp: 2500, maxXp: 10000, requiredForNext: 7500 };
     if (level === 3) return { minXp: 10000, maxXp: 25000, requiredForNext: 15000 };
     if (level === 4) return { minXp: 25000, maxXp: 55000, requiredForNext: 30000 };
-    return { minXp: 55000, maxXp: 100000, requiredForNext: 45000 };
+    return { minXp: 55000, maxXp: 100000, requiredForNext: 45000 }; // Plafond prestige
 };
 
 export const calculateLevelFromXp = (xp: number): number => {
@@ -51,7 +47,7 @@ export const calculateLevelFromXp = (xp: number): number => {
     if (xp < 10000) return 2;
     if (xp < 25000) return 3;
     if (xp < 55000) return 4;
-    return 5;
+    return 5; // Niveau Max (Légende)
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -83,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // --- Recalcul du niveau ---
+        // --- Recalcul du niveau Rare ---
         const currentXp = data.xp || 0;
         const correctLevel = calculateLevelFromXp(currentXp);
         if (data.level !== correctLevel) {

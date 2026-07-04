@@ -1,4 +1,3 @@
-
 // src/lib/firestore.service.ts
 import { db } from './firebase';
 import { collection, addDoc, getDocs, QueryDocumentSnapshot, DocumentData, Timestamp, doc, updateDoc, query, where, orderBy, deleteDoc, serverTimestamp, getDoc, writeBatch, limit, increment } from 'firebase/firestore';
@@ -249,17 +248,8 @@ export const saveAttemptToFirestore = async (attemptData: Omit<Attempt, 'id'>) =
             xp: increment(xpToGain)
         });
 
-        // Fetch updated data to calculate level
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-            const currentXp = userSnap.data().xp || 0;
-            const newLevel = Math.floor(currentXp / 1000) + 1;
-            const currentLevel = userSnap.data().level || 1;
-            
-            if (newLevel !== currentLevel) {
-                await updateDoc(userDocRef, { level: newLevel });
-            }
-        }
+        // La logique de niveau est gérée par le AuthProvider lors de la prochaine synchronisation
+        // Cela garantit une source de vérité unique pour la rareté des niveaux.
 
         return docRef.id;
     } catch (e) {

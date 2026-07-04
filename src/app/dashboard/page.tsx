@@ -20,7 +20,8 @@ import {
   Video,
   Shuffle,
   Lock,
-  Star
+  Star,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,7 +109,9 @@ export default function Dashboard() {
     const xp = userData.xp || 0;
     const range = getXpRangeForLevel(level);
     
+    // XP acquis dans le niveau actuel
     const xpInLevel = xp - range.minXp;
+    // Pourcentage de complétion du palier actuel
     const percent = Math.min(100, Math.max(0, (xpInLevel / range.requiredForNext) * 100));
     
     return {
@@ -312,7 +315,7 @@ export default function Dashboard() {
           </Card>
 
           <Card className="glassmorphism shadow-xl card-stat border-0">
-            <CardHeader>
+            <CardHeader className="pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Play className="w-5 h-5 text-white fill-current" />
