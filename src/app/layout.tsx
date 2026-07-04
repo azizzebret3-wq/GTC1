@@ -6,7 +6,7 @@ import 'katex/dist/katex.min.css';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import React, { useEffect, useState } from 'react';
-import { AuthProvider } from '@/hooks/useAuth.tsx';
+import { AuthProvider } from '@/firebase/provider';
 import OfflineNotice from '@/components/OfflineNotice';
 
 const APP_NAME = "Gagne ton concours";
