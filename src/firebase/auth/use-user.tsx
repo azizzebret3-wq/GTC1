@@ -2,7 +2,7 @@
 
 /**
  * @fileOverview Hook utilitaire pour accéder aux données de l'utilisateur.
- * Ce fichier utilise le fournisseur d'authentification centralisé de l'application.
+ * Utilise la source de vérité unique définie dans @/firebase/provider.
  */
 
 import { useAuth } from '@/firebase/provider';

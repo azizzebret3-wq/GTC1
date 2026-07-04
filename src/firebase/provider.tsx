@@ -30,6 +30,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Formule de progression rare : Niveau 2 = 2500, Niveau 3 = 7500, Niveau 4 = 17500, Niveau 5 = 37500
+export const getXpRangeForLevel = (level: number) => {
+    let minXp = 0;
+    for (let i = 1; i < level; i++) {
+        minXp += 2500 * Math.pow(2, i - 1);
+    }
+    const xpNeededForNext = 2500 * Math.pow(2, level - 1);
+    return { minXp, maxXp: minXp + xpNeededForNext, requiredForNext: xpNeededForNext };
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
