@@ -63,23 +63,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userDoc.exists()) {
         const data = userDoc.data();
         
-        // --- Vérification de l'expiration de l'abonnement ---
+        // --- VÉRIFICATION AUTOMATIQUE DE L'EXPIRATION PREMIUM ---
         let currentSubType = data.subscription_type || 'gratuit';
+        let currentSubTier = data.subscription_tier || null;
         let currentSubExpiry = data.subscription_expires_at;
 
         if (currentSubType === 'premium' && currentSubExpiry) {
           const expiryDate = currentSubExpiry instanceof Timestamp ? currentSubExpiry.toDate() : new Date(currentSubExpiry);
-          if (new Date() > expiryDate) {
+          const now = new Date();
+          
+          if (now > expiryDate) {
+            // L'abonnement a expiré ! On désactive sans intervention admin.
             await updateDoc(userDocRef, {
               subscription_type: 'gratuit',
               subscription_tier: null,
               subscription_expires_at: null
             });
             currentSubType = 'gratuit';
+            currentSubTier = null;
+            currentSubExpiry = null;
           }
         }
 
-        // --- Recalcul du niveau Rare ---
+        // --- Recalcul du niveau de prestige ---
         const currentXp = data.xp || 0;
         const correctLevel = calculateLevelFromXp(currentXp);
         if (data.level !== correctLevel) {
@@ -95,8 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoURL: currentUser.photoURL || undefined,
           role: data.role,
           subscription_type: currentSubType,
-          subscription_tier: data.subscription_tier,
-          subscription_expires_at: data.subscription_expires_at,
+          subscription_tier: currentSubTier,
+          subscription_expires_at: currentSubExpiry,
           createdAt: data.createdAt,
           xp: currentXp,
           level: correctLevel,

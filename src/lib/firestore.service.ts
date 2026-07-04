@@ -209,27 +209,33 @@ export const updateUserRoleInFirestore = async (uid: string, role: 'admin' | 'us
     }
 };
 
+/**
+ * Met à jour l'abonnement et calcule automatiquement la date d'expiration.
+ */
 export const updateUserSubscriptionInFirestore = async (uid: string, subscription: { type: 'gratuit' | 'premium', tier: 'mensuel' | 'annuel' | null }) => {
     try {
         const userDocRef = doc(db, 'users', uid);
-        const updateData: Partial<AppUser> = {};
-
-        updateData.subscription_type = subscription.type;
+        const updateData: any = {
+            subscription_type: subscription.type,
+            subscription_tier: subscription.tier
+        };
         
         if (subscription.type === 'premium') {
             const now = new Date();
+            let expiryDate = new Date();
+            
             if (subscription.tier === 'mensuel') {
-                updateData.subscription_expires_at = new Date(now.setMonth(now.getMonth() + 1));
+                expiryDate.setDate(now.getDate() + 30); // 30 jours
             } else if (subscription.tier === 'annuel') {
-                updateData.subscription_expires_at = new Date(now.setFullYear(now.getFullYear() + 1));
+                expiryDate.setDate(now.getDate() + 365); // 365 jours
             }
-            updateData.subscription_tier = subscription.tier || undefined;
+            updateData.subscription_expires_at = Timestamp.fromDate(expiryDate);
         } else {
             updateData.subscription_expires_at = null;
             updateData.subscription_tier = null;
         }
 
-        await updateDoc(userDocRef, updateData as any);
+        await updateDoc(userDocRef, updateData);
     } catch (e) {
         console.error("Error updating user subscription: ", e);
         throw new Error("Could not update user subscription");
@@ -247,9 +253,6 @@ export const saveAttemptToFirestore = async (attemptData: Omit<Attempt, 'id'>) =
         await updateDoc(userDocRef, {
             xp: increment(xpToGain)
         });
-
-        // La logique de niveau est gérée par le AuthProvider lors de la prochaine synchronisation
-        // Cela garantit une source de vérité unique pour la rareté des niveaux.
 
         return docRef.id;
     } catch (e) {
