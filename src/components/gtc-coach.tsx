@@ -33,19 +33,23 @@ export default function GTCCoach() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: `Salut ${userData?.fullName?.split(' ')[0] || 'Champion'} ! Je suis ton Coach GTC alimenté par Gemini 3.5. Prêt à tester la puissance de l'IA en direct ? 🚀` }
+    { role: 'model', content: `Salut ${userData?.fullName?.split(' ')[0] || 'Champion'} ! Je suis ton Coach GTC (Gemini 3.5). Pose-moi ta question, je te réponds instantanément ! 🚀` }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
+      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
     }
-  }, [messages, isMinimized]);
+  }, [messages, streamingMessage, isMinimized]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -54,6 +58,7 @@ export default function GTCCoach() {
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
+    setStreamingMessage('');
 
     try {
       // @ts-ignore - Puter est chargé globalement via script dans layout.tsx
@@ -63,29 +68,35 @@ export default function GTCCoach() {
         throw new Error("Puter.js n'est pas encore chargé.");
       }
 
-      // Construction du prompt système
-      const systemPrompt = `Tu es "Coach GTC", le mentor n°1 pour la réussite aux concours d'État au Burkina Faso. 
-      L'étudiant s'appelle ${userData?.fullName || 'inconnu'}. 
-      Type de concours : ${userData?.competitionType || 'Général'}.
-      Niveau de Prestige actuel : ${userData?.level || 1}/5.
-      
-      Réponds de manière professionnelle, stratégique et motivante. Utilise des expressions locales si pertinent (ENA, ENSEP, etc.). 
-      Si tu utilises des mathématiques, utilise les délimiteurs $ pour l'inline et $$ pour les blocs.`;
+      // Construction du prompt système ultra-rapide
+      const systemPrompt = `Tu es "Coach GTC", mentor n°1 pour la réussite aux concours au Burkina Faso. 
+      Étudiant: ${userData?.fullName || 'inconnu'}. 
+      Concours: ${userData?.competitionType || 'Général'}.
+      Sois direct, motivant et stratégique. 
+      Utilise $ pour les maths.`;
 
+      // Appel en mode STREAMING pour une réponse instantanée
       const response = await puter.ai.chat(
         `${systemPrompt}\n\nUtilisateur: ${userMessage}`,
         { 
             model: "google/gemini-3.5-flash",
-            stream: false 
+            stream: true 
         }
       );
 
-      const content = typeof response === 'string' ? response : (response.message?.content || response.text || "J'ai reçu votre message mais je n'ai pas pu formuler de réponse.");
+      let fullContent = '';
+      for await (const part of response) {
+        if (part?.text) {
+          fullContent += part.text;
+          setStreamingMessage(fullContent);
+        }
+      }
 
-      setMessages(prev => [...prev, { role: 'model', content: content }]);
+      setMessages(prev => [...prev, { role: 'model', content: fullContent }]);
+      setStreamingMessage('');
     } catch (error: any) {
       console.error("Erreur Puter AI:", error);
-      setMessages(prev => [...prev, { role: 'model', content: `Désolé, une erreur est survenue avec Puter.js : ${error.message || "Connexion perdue"}.` }]);
+      setMessages(prev => [...prev, { role: 'model', content: `Désolé, une erreur est survenue : ${error.message || "Connexion perdue"}.` }]);
     } finally {
       setIsLoading(false);
     }
@@ -119,10 +130,10 @@ export default function GTCCoach() {
                 <Sparkles className="w-6 h-6 text-white" />
              </div>
              <div>
-                <CardTitle className="text-base font-black tracking-tight">Coach GTC (Gemini 3.5)</CardTitle>
+                <CardTitle className="text-base font-black tracking-tight">Coach GTC (Ultra-Rapide)</CardTitle>
                 <div className="flex items-center gap-1.5">
                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                   <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">Connecté via Puter</span>
+                   <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest">Streaming Actif</span>
                 </div>
              </div>
           </div>
@@ -140,7 +151,7 @@ export default function GTCCoach() {
           <>
             <CardContent className="p-0 flex-1 overflow-hidden flex flex-col bg-slate-50/50 dark:bg-black/20">
               <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                <div className="space-y-6">
+                <div className="space-y-6 pb-4">
                   {messages.map((msg, i) => (
                     <div key={i} className={cn(
                       "flex gap-3 max-w-[90%]",
@@ -148,11 +159,9 @@ export default function GTCCoach() {
                     )}>
                       <Avatar className="h-9 w-9 shrink-0 border-2 border-white/50 shadow-md">
                         {msg.role === 'model' ? (
-                          <>
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-500 text-white">
-                              <Bot className="h-5 w-5" />
-                            </AvatarFallback>
-                          </>
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-500 text-white">
+                            <Bot className="h-5 w-5" />
+                          </AvatarFallback>
                         ) : (
                           <>
                              <AvatarImage src={userData?.photoURL ?? undefined} />
@@ -172,10 +181,26 @@ export default function GTCCoach() {
                       </div>
                     </div>
                   ))}
-                  {isLoading && (
+                  
+                  {/* Message en cours de streaming */}
+                  {streamingMessage && (
                     <div className="flex gap-3 mr-auto max-w-[90%]">
                        <Avatar className="h-9 w-9 shrink-0 border-2 border-white/50 shadow-md">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 text-white">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-500 text-white">
+                            <Bot className="h-5 w-5" />
+                          </AvatarFallback>
+                       </Avatar>
+                       <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-700 shadow-sm">
+                          <MathText text={streamingMessage} />
+                          <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse align-middle"></span>
+                       </div>
+                    </div>
+                  )}
+
+                  {isLoading && !streamingMessage && (
+                    <div className="flex gap-3 mr-auto max-w-[90%]">
+                       <Avatar className="h-9 w-9 shrink-0 border-2 border-white/50 shadow-md">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-500 text-white">
                             <Bot className="h-5 w-5" />
                           </AvatarFallback>
                        </Avatar>
@@ -194,7 +219,7 @@ export default function GTCCoach() {
               <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-950/20 border-t border-yellow-100 dark:border-yellow-900 flex items-center gap-2">
                 <AlertCircle className="w-3 h-3 text-yellow-600" />
                 <p className="text-[9px] font-bold text-yellow-700 dark:text-yellow-400 uppercase tracking-tighter">
-                    Puter IA peut demander une connexion pour valider les crédits.
+                    Streaming activé pour des réponses en temps réel.
                 </p>
               </div>
             </CardContent>
@@ -202,7 +227,7 @@ export default function GTCCoach() {
             <CardFooter className="p-4 border-t bg-white dark:bg-slate-900 shrink-0">
                <div className="flex w-full gap-2 relative">
                   <Input 
-                    placeholder="Posez votre question au coach..." 
+                    placeholder="Posez votre question..." 
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
