@@ -30,7 +30,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Formule de progression rare : Niveau 2 = 2500, Niveau 3 = 7500, Niveau 4 = 17500, Niveau 5 = 37500
+/**
+ * Formule de progression Rare (Exponentielle)
+ * Niveau 1 : 0 - 2500 XP
+ * Niveau 2 : 2500 - 7500 XP (Besoin de 5000)
+ * Niveau 3 : 7500 - 17500 XP (Besoin de 10000)
+ * Niveau 4 : 17500 - 37500 XP (Besoin de 20000)
+ */
 export const getXpRangeForLevel = (level: number) => {
     let minXp = 0;
     for (let i = 1; i < level; i++) {
@@ -69,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           level: data.level || 1,
         };
 
-        // Vérification de l'expiration de l'abonnement
+        // Vérification automatique de l'expiration de l'abonnement
         const isOnline = typeof window !== 'undefined' && window.navigator.onLine;
         if (isOnline && fetchedData.subscription_type === 'premium' && fetchedData.subscription_expires_at) {
           let expiryDate: Date;
