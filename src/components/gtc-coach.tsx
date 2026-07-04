@@ -5,15 +5,12 @@ import {
   Sparkles, 
   Send, 
   X, 
-  Minus, 
-  Maximize2, 
   Loader2, 
-  User,
   Bot,
-  BrainCircuit,
   AlertCircle,
   ChevronDown,
-  MessageSquare
+  MessageSquare,
+  Maximize2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -34,12 +31,33 @@ export default function GTCCoach() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: `Bonjour ${userData?.fullName?.split(' ')[0] || 'Champion'}. Je suis votre Coach GTC spécialisé. Quelle stratégie souhaitez-vous aborder aujourd'hui ? 🚀` }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Charger l'historique au montage
+  useEffect(() => {
+    const savedMessages = localStorage.getItem('gtc_coach_history');
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        console.error("Erreur chargement historique coach", e);
+      }
+    } else {
+      setMessages([
+        { role: 'model', content: `Bonjour ${userData?.fullName?.split(' ')[0] || 'Champion'}. Je suis votre Coach GTC spécialisé. Quelle stratégie souhaitez-vous aborder aujourd'hui ? 🚀` }
+      ]);
+    }
+  }, [userData]);
+
+  // Sauvegarder l'historique à chaque changement
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('gtc_coach_history', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   // Auto-scroll constant lors de la génération
   useEffect(() => {
@@ -49,14 +67,15 @@ export default function GTCCoach() {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }, [messages, streamingMessage, isMinimized]);
+  }, [messages, streamingMessage, isMinimized, isOpen]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const newMessages = [...messages, { role: 'user', content: userMessage } as Message];
+    setMessages(newMessages);
     setIsLoading(true);
     setStreamingMessage('');
 
@@ -68,15 +87,20 @@ export default function GTCCoach() {
         throw new Error("Initialisation en cours...");
       }
 
+      // Construire le contexte avec l'historique (limité aux 10 derniers messages pour la performance)
+      const historyContext = messages.slice(-10).map(m => `${m.role === 'user' ? 'Étudiant' : 'Coach'}: ${m.content}`).join('\n');
+
       const systemPrompt = `Tu es "Coach GTC", le mentor d'élite pour la réussite aux concours d'État au Burkina Faso. 
       Utilisateur: ${userData?.fullName || 'Étudiant'}. 
       Objectif: ${userData?.competitionType || 'Concours Direct/Pro'}.
       Style: Professionnel, hautement stratégique, motivant mais rigoureux. 
       CONSIGNE: Utilise impérativement les délimiteurs $ pour TOUTE expression mathématique ou symbole technique. 
-      Réponds directement et de manière structurée.`;
+      Réponds directement et de manière structurée. Souviens-toi de la conversation précédente ci-dessous.`;
+
+      const fullPrompt = `${systemPrompt}\n\nHistorique récent:\n${historyContext}\n\nQuestion actuelle de l'étudiant: ${userMessage}`;
 
       const response = await puter.ai.chat(
-        `${systemPrompt}\n\nQuestion de l'étudiant: ${userMessage}`,
+        fullPrompt,
         { 
             model: "google/gemini-3.5-flash",
             stream: true 
@@ -101,16 +125,22 @@ export default function GTCCoach() {
     }
   };
 
+  const clearHistory = () => {
+    const initialMsg: Message = { role: 'model', content: `Historique effacé. Comment puis-je vous aider à nouveau, ${userData?.fullName?.split(' ')[0] || 'Champion'} ?` };
+    setMessages([initialMsg]);
+    localStorage.removeItem('gtc_coach_history');
+  };
+
   if (!isOpen) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-[60] w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 shadow-[0_10px_40px_rgba(79,70,229,0.4)] hover:scale-110 transition-all duration-300 group p-0 border-4 border-white/20"
+        className="fixed bottom-6 right-6 z-[60] w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 shadow-[0_10px_40px_rgba(79,70,229,0.4)] hover:scale-110 transition-all duration-300 group p-0 border-2 border-white/20"
       >
-        <MessageSquare className="w-8 h-8 text-white group-hover:rotate-12 transition-transform" />
-        <span className="absolute -top-1 -right-1 flex h-5 w-5">
+        <MessageSquare className="w-6 h-6 text-white group-hover:rotate-12 transition-transform" />
+        <span className="absolute -top-1 -right-1 flex h-4 w-4">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-5 w-5 bg-pink-500 border-2 border-white"></span>
+          <span className="relative inline-flex rounded-full h-4 w-4 bg-pink-500 border-2 border-white"></span>
         </span>
       </Button>
     );
@@ -154,6 +184,11 @@ export default function GTCCoach() {
         {!isMinimized && (
           <>
             <CardContent className="p-0 flex-1 overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/40">
+              <div className="flex justify-end px-4 py-1">
+                <Button variant="link" size="sm" className="text-[10px] h-auto p-0 text-muted-foreground hover:text-red-500" onClick={clearHistory}>
+                  Effacer l'historique
+                </Button>
+              </div>
               <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollRef}>
                 <div className="space-y-6 pb-4">
                   {messages.map((msg, i) => (
@@ -224,7 +259,7 @@ export default function GTCCoach() {
               <div className="px-4 py-2 bg-indigo-50/50 dark:bg-indigo-900/10 border-t border-indigo-100/50 dark:border-indigo-900/30 flex items-center gap-2">
                 <AlertCircle className="w-3.5 h-3.5 text-indigo-500" />
                 <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-tight">
-                    Analyse stratégique en temps réel activée.
+                    Conseils stratégiques personnalisés actifs.
                 </p>
               </div>
             </CardContent>
