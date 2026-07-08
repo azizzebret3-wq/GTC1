@@ -7,7 +7,7 @@ import { useForm, useFieldArray, Controller, FormProvider, useFormContext } from
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, CalendarClock, History, Clock, Layout
+  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, CalendarClock, History, Clock, Layout, ChevronRight
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -347,6 +347,8 @@ export default function QuizAdminPanel() {
     try {
       // @ts-ignore
       const puter = window.puter;
+      if (!puter) throw new Error("Puter.js non initialisé");
+
       const prompt = `Tu es un expert concepteur de quiz pour les concours administratifs au Burkina Faso. 
       Génère un quiz de très haute qualité sur le sujet : "${topic}".
       Difficulté demandée : ${difficulty}. Nombre de questions : ${num}.
@@ -362,19 +364,22 @@ export default function QuizAdminPanel() {
         "title": "Titre engageant",
         "description": "Description concise du quiz",
         "category": "Choisir parmi: ${officialCategories.join(', ')}",
-        "duration_minutes": ${num * 1.5},
+        "duration_minutes": ${Math.round(num * 1.5)},
         "questions": [
           {
             "question": "Énoncé de la question",
             "options": ["Opt 1", "Opt 2", "Opt 3", "Opt 4"],
-            "correctAnswers": ["La réponse exacte (doit être identique à l'une des options)"],
-            "explanation": "Explication pédagogique riche et détaillée."
+            "correctAnswers": ["La réponse exacte"],
+            "explanation": "Explication riche."
           }
         ]
       }`;
 
-      const response = await puter.ai.chat(prompt, { model: 'google/gemini-1.5-pro' });
-      const cleanJson = response.text.replace(/```json|```/g, '').trim();
+      // Dans Puter.js non-streaming, response est directement le texte
+      const response = await puter.ai.chat(prompt, { model: 'google/gemini-3.5-flash' });
+      const contentText = typeof response === 'string' ? response : (response as any).text;
+      
+      const cleanJson = contentText.replace(/```json|```/g, '').trim();
       const result = JSON.parse(cleanJson);
 
       formMethods.reset({
@@ -393,8 +398,8 @@ export default function QuizAdminPanel() {
       setIsAiOpen(false);
       toast({ title: "Génération IA réussie", description: "Veuillez réviser le contenu avant d'enregistrer." });
     } catch (e) {
-      console.error(e);
-      toast({ variant: 'destructive', title: 'Erreur IA', description: 'Impossible de générer le contenu.' });
+      console.error("AI Generation Error:", e);
+      toast({ variant: 'destructive', title: 'Erreur IA', description: 'Impossible de générer le contenu. Vérifiez votre connexion.' });
     } finally {
       setIsGenerating(false);
     }
@@ -489,7 +494,6 @@ export default function QuizAdminPanel() {
                 <form onSubmit={formMethods.handleSubmit(onFormSubmit)} className="h-full flex flex-col gap-6">
                    <ScrollArea className="flex-1 pr-4">
                       <div className="space-y-8">
-                        {/* Métadonnées */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <Card className="lg:col-span-2 p-6 rounded-3xl border-0 shadow-sm space-y-4">
                                 <h3 className="font-black text-sm uppercase text-muted-foreground flex items-center gap-2"><Layout className="w-4 h-4"/> Informations Générales</h3>
@@ -509,13 +513,13 @@ export default function QuizAdminPanel() {
                                     </div>
                                     <div className="md:col-span-2 space-y-2">
                                         <Label className="font-bold">Description</Label>
-                                        <Input {...formMethods.register("description")} placeholder="Bref résumé des objectifs pédagogiques..." className="rounded-xl h-11" />
+                                        <Input {...formMethods.register("description")} placeholder="Bref résumé..." className="rounded-xl h-11" />
                                     </div>
                                 </div>
                             </Card>
 
                             <Card className="p-6 rounded-3xl border-0 shadow-sm space-y-4">
-                                <h3 className="font-black text-sm uppercase text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4"/> Paramètres d'Accès</h3>
+                                <h3 className="font-black text-sm uppercase text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4"/> Paramètres</h3>
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="space-y-2">
@@ -545,8 +549,8 @@ export default function QuizAdminPanel() {
                                         )}/>
                                     </div>
                                     {formMethods.watch('isMockExam') && (
-                                        <div className="space-y-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl animate-in slide-in-from-top-1">
-                                            <Label className="text-xs font-bold uppercase text-amber-700 dark:text-amber-400">Programmée pour le :</Label>
+                                        <div className="space-y-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 rounded-xl">
+                                            <Label className="text-xs font-bold uppercase text-amber-700">Programmation :</Label>
                                             <Controller name="scheduledFor" control={formMethods.control} render={({ field }) => (
                                                 <Input type="datetime-local" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(new Date(e.target.value))} className="rounded-lg h-9 text-xs border-amber-200" />
                                             )}/>
@@ -556,7 +560,6 @@ export default function QuizAdminPanel() {
                             </Card>
                         </div>
 
-                        {/* Questions */}
                         <div className="space-y-6">
                             <div className="flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-md z-10 py-4 px-2 border-b">
                                 <div className="flex items-center gap-3">
@@ -564,14 +567,14 @@ export default function QuizAdminPanel() {
                                     <h3 className="font-black text-lg">Questions de l'épreuve</h3>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button type="button" variant="outline" size="sm" onClick={() => setIsAiOpen(true)} className="rounded-xl h-10 border-purple-500 text-purple-600 hover:bg-purple-50"><BrainCircuit className="mr-2 h-4 w-4"/>Génération IA</Button>
+                                    <Button type="button" variant="outline" size="sm" onClick={() => setIsAiOpen(true)} className="rounded-xl h-10 border-purple-500 text-purple-600 hover:bg-purple-50"><BrainCircuit className="mr-2 h-4 w-4"/>IA Générateur</Button>
                                     <Button type="button" size="sm" onClick={() => formMethods.setValue('questions', [...formMethods.getValues('questions'), { question: '', options: [{value:''},{value:''}], correctAnswers: [] }])} className="rounded-xl h-10 bg-primary text-white"><PlusCircle className="mr-2 h-4 w-4"/>Ajouter</Button>
                                 </div>
                             </div>
                             
                             <div className="space-y-12 pb-10">
                                 {formMethods.watch('questions').map((_, idx) => (
-                                    <Card key={idx} className="p-8 rounded-[2.5rem] border-2 border-slate-100 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+                                    <Card key={idx} className="p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm relative overflow-hidden group">
                                         <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-primary to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         <QuestionsForm qIndex={idx} removeQuestion={(i) => formMethods.setValue('questions', formMethods.getValues('questions').filter((_, q) => q !== i))} />
                                     </Card>
@@ -585,7 +588,7 @@ export default function QuizAdminPanel() {
                       <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="rounded-xl h-12 px-8 font-bold">Annuler</Button>
                       <Button type="submit" disabled={formMethods.formState.isSubmitting} className="rounded-xl h-12 px-12 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black shadow-xl hover:scale-105 active:scale-95 transition-all">
                         {formMethods.formState.isSubmitting ? <Loader className="animate-spin mr-2"/> : <Save className="mr-2 h-5 w-5"/>}
-                        Enregistrer l'examen complet
+                        Enregistrer
                       </Button>
                    </div>
                 </form>
@@ -598,4 +601,3 @@ export default function QuizAdminPanel() {
     </div>
   );
 }
-
