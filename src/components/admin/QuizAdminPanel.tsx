@@ -7,7 +7,7 @@ import { useForm, useFieldArray, Controller, FormProvider, useFormContext } from
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, CalendarClock, History, Clock, Layout, ChevronRight
+  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, Layout, Clock, ChevronRight, Code, Import
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -114,12 +114,46 @@ const MathToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
           className="text-xs h-8 rounded-lg bg-background hover:bg-primary hover:text-white transition-all"
           onClick={() => onInsert(value)}
         >
-          <MathText text={'$'+value.replace(/\{\}/g, '{•}')+'$'} />
+          {key}
         </Button>
       ))}
     </div>
   );
 };
+
+function ImportJsonDialog({ open, onOpenChange, onImport }: { open: boolean, onOpenChange: (open: boolean) => void, onImport: (jsonStr: string) => void }) {
+    const [jsonStr, setJsonStr] = useState('');
+    const handleImport = () => {
+        onImport(jsonStr);
+        setJsonStr('');
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-xl rounded-3xl">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-black gradient-text">Importer depuis JSON</DialogTitle>
+                    <DialogDescription className="font-medium">Collez votre objet JSON de quiz pour le charger instantanément.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <Textarea 
+                        value={jsonStr} 
+                        onChange={e => setJsonStr(e.target.value)} 
+                        placeholder='{"title": "...", "questions": [...] }' 
+                        className="rounded-xl min-h-[300px] font-mono text-xs" 
+                    />
+                </div>
+                <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl h-12">Annuler</Button>
+                    <Button onClick={handleImport} className="rounded-xl h-12 bg-indigo-600 text-white font-bold">
+                        <Import className="w-4 h-4 mr-2" />
+                        Charger le code
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 function AiGeneratorDialog({ open, onOpenChange, onGenerate, isGenerating }: { open: boolean, onOpenChange: (open: boolean) => void, onGenerate: (topic: string, num: number, diff: string) => void, isGenerating: boolean }) {
     const [topic, setTopic] = useState('');
@@ -277,6 +311,7 @@ export default function QuizAdminPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
+  const [isJsonOpen, setIsJsonOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
 
@@ -323,6 +358,29 @@ export default function QuizAdminPanel() {
       formMethods.reset({ title: '', questions: [{ question: '', options: [{value:''},{value:''}], correctAnswers: [] }] });
     }
     setIsFormOpen(true);
+  };
+
+  const handleImportJson = (jsonStr: string) => {
+    try {
+        const result = JSON.parse(jsonStr);
+        formMethods.reset({
+            ...formMethods.getValues(),
+            title: result.title || "Nouveau Quiz",
+            description: result.description || "",
+            category: result.category || "Mixte",
+            duration_minutes: result.duration_minutes || 15,
+            questions: (result.questions || []).map((q: any) => ({
+                question: q.question || "",
+                explanation: q.explanation || "",
+                options: (q.options || []).map((o: string) => ({ value: o })),
+                correctAnswers: q.correctAnswers || []
+            }))
+        });
+        setIsJsonOpen(false);
+        toast({ title: "Importation réussie", description: "Le code JSON a été injecté dans le formulaire." });
+    } catch (e) {
+        toast({ variant: 'destructive', title: "Erreur JSON", description: "Format de code invalide." });
+    }
   };
 
   const onFormSubmit = async (data: QuizFormData) => {
@@ -377,19 +435,12 @@ export default function QuizAdminPanel() {
 
       const response = await puter.ai.chat(prompt, { model: 'google/gemini-1.5-flash' });
       
-      // Sécurisation de l'accès au texte de réponse
       let contentText = "";
-      if (typeof response === 'string') {
-        contentText = response;
-      } else if (response && response.text) {
-        contentText = response.text;
-      } else if (response && response.message && response.message.content) {
-        contentText = response.message.content;
-      }
+      if (typeof response === 'string') contentText = response;
+      else if (response && response.text) contentText = response.text;
+      else if (response && response.message && response.message.content) contentText = response.message.content;
 
-      if (!contentText) {
-        throw new Error("Réponse de l'IA vide ou malformée");
-      }
+      if (!contentText) throw new Error("Réponse de l'IA vide");
       
       const cleanJson = contentText.replace(/```json|```/g, '').trim();
       const result = JSON.parse(cleanJson);
@@ -410,8 +461,7 @@ export default function QuizAdminPanel() {
       setIsAiOpen(false);
       toast({ title: "Génération IA réussie", description: "Veuillez réviser le contenu avant d'enregistrer." });
     } catch (e) {
-      console.error("AI Generation Error:", e);
-      toast({ variant: 'destructive', title: 'Erreur IA', description: 'Impossible de générer le contenu. Vérifiez votre connexion.' });
+      toast({ variant: 'destructive', title: 'Erreur IA', description: 'Impossible de générer le contenu.' });
     } finally {
       setIsGenerating(false);
     }
@@ -579,6 +629,7 @@ export default function QuizAdminPanel() {
                                     <h3 className="font-black text-lg">Questions de l'épreuve</h3>
                                 </div>
                                 <div className="flex gap-2">
+                                    <Button type="button" variant="outline" size="sm" onClick={() => setIsJsonOpen(true)} className="rounded-xl h-10 border-indigo-500 text-indigo-600 hover:bg-indigo-50"><Code className="mr-2 h-4 w-4"/>Code JSON</Button>
                                     <Button type="button" variant="outline" size="sm" onClick={() => setIsAiOpen(true)} className="rounded-xl h-10 border-purple-500 text-purple-600 hover:bg-purple-50"><BrainCircuit className="mr-2 h-4 w-4"/>IA Générateur</Button>
                                     <Button type="button" size="sm" onClick={() => formMethods.setValue('questions', [...formMethods.getValues('questions'), { question: '', options: [{value:''},{value:''}], correctAnswers: [] }])} className="rounded-xl h-10 bg-primary text-white"><PlusCircle className="mr-2 h-4 w-4"/>Ajouter</Button>
                                 </div>
@@ -610,6 +661,7 @@ export default function QuizAdminPanel() {
       </Dialog>
       
       <AiGeneratorDialog open={isAiOpen} onOpenChange={setIsAiOpen} onGenerate={handleGenerateAi} isGenerating={isGenerating} />
+      <ImportJsonDialog open={isJsonOpen} onOpenChange={setIsJsonOpen} onImport={handleImportJson} />
     </div>
   );
 }
