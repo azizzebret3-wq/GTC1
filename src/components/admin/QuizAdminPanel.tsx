@@ -375,24 +375,36 @@ export default function QuizAdminPanel() {
         ]
       }`;
 
-      // Dans Puter.js non-streaming, response est directement le texte
-      const response = await puter.ai.chat(prompt, { model: 'google/gemini-3.5-flash' });
-      const contentText = typeof response === 'string' ? response : (response as any).text;
+      const response = await puter.ai.chat(prompt, { model: 'google/gemini-1.5-flash' });
+      
+      // Sécurisation de l'accès au texte de réponse
+      let contentText = "";
+      if (typeof response === 'string') {
+        contentText = response;
+      } else if (response && response.text) {
+        contentText = response.text;
+      } else if (response && response.message && response.message.content) {
+        contentText = response.message.content;
+      }
+
+      if (!contentText) {
+        throw new Error("Réponse de l'IA vide ou malformée");
+      }
       
       const cleanJson = contentText.replace(/```json|```/g, '').trim();
       const result = JSON.parse(cleanJson);
 
       formMethods.reset({
         ...formMethods.getValues(),
-        title: result.title,
-        description: result.description,
-        category: result.category,
-        duration_minutes: result.duration_minutes,
-        questions: result.questions.map((q: any) => ({
-            question: q.question,
-            explanation: q.explanation,
-            options: q.options.map((o: string) => ({ value: o })),
-            correctAnswers: q.correctAnswers
+        title: result.title || topic,
+        description: result.description || "",
+        category: result.category || "Mixte",
+        duration_minutes: result.duration_minutes || num,
+        questions: (result.questions || []).map((q: any) => ({
+            question: q.question || "",
+            explanation: q.explanation || "",
+            options: (q.options || []).map((o: string) => ({ value: o })),
+            correctAnswers: q.correctAnswers || []
         }))
       });
       setIsAiOpen(false);
