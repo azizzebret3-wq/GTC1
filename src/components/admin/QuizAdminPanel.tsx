@@ -7,7 +7,7 @@ import { useForm, useFieldArray, Controller, FormProvider, useFormContext } from
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, Shuffle, FileJson
+  ClipboardList, PlusCircle, Trash2, Edit, Loader, Save, ArrowLeft, BrainCircuit, X, Sparkles, CalendarClock, History, Clock, Layout
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -21,7 +21,6 @@ import {
   saveQuizToFirestore,
   updateQuizInFirestore,
   NewQuizData,
-  QuizQuestion,
 } from '@/lib/firestore.service';
 import {
   AlertDialog,
@@ -105,14 +104,14 @@ const latexSnippets = {
 
 const MathToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
   return (
-    <div className="flex flex-wrap gap-1 p-2 rounded-md border bg-background mb-2">
+    <div className="flex flex-wrap gap-1 p-2 rounded-xl border bg-muted/30 mb-2">
       {Object.entries(latexSnippets).map(([key, value]) => (
         <Button
           key={key}
           type="button"
           variant="outline"
           size="sm"
-          className="text-xs"
+          className="text-xs h-8 rounded-lg bg-background hover:bg-primary hover:text-white transition-all"
           onClick={() => onInsert(value)}
         >
           <MathText text={'$'+value.replace(/\{\}/g, '{•}')+'$'} />
@@ -129,30 +128,30 @@ function AiGeneratorDialog({ open, onOpenChange, onGenerate, isGenerating }: { o
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md rounded-3xl">
                 <DialogHeader>
-                    <DialogTitle>Générer avec l'IA (Puter)</DialogTitle>
-                    <DialogDescription>Créez un quiz de haute qualité sur n'importe quel sujet.</DialogDescription>
+                    <DialogTitle className="text-2xl font-black gradient-text">Intelligence Artificielle</DialogTitle>
+                    <DialogDescription className="font-medium">Créez un quiz d'élite en quelques secondes.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label>Sujet du Quiz</Label>
-                        <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Ex: Histoire du Burkina Faso" />
+                        <Label className="font-bold">Sujet de l'examen</Label>
+                        <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Ex: Droit Constitutionnel Burkinabè" className="rounded-xl h-12" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Questions</Label>
+                            <Label className="font-bold">Questions</Label>
                             <Select value={num} onValueChange={setNum}>
-                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                <SelectTrigger className="rounded-xl h-12"><SelectValue/></SelectTrigger>
                                 <SelectContent>
-                                    {['5','10','15','20'].map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                                    {['5','10','15','20','30'].map(v => <SelectItem key={v} value={v}>{v} questions</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Difficulté</Label>
+                            <Label className="font-bold">Difficulté</Label>
                             <Select value={diff} onValueChange={setDiff}>
-                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                <SelectTrigger className="rounded-xl h-12"><SelectValue/></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="facile">Facile</SelectItem>
                                     <SelectItem value="moyen">Moyen</SelectItem>
@@ -162,9 +161,9 @@ function AiGeneratorDialog({ open, onOpenChange, onGenerate, isGenerating }: { o
                         </div>
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-                    <Button onClick={() => onGenerate(topic, parseInt(num), diff)} disabled={isGenerating || !topic}>
+                <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl h-12">Annuler</Button>
+                    <Button onClick={() => onGenerate(topic, parseInt(num), diff)} disabled={isGenerating || !topic} className="rounded-xl h-12 bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-bold">
                         {isGenerating ? <Loader className="w-4 h-4 mr-2 animate-spin"/> : <Sparkles className="w-4 h-4 mr-2"/>}
                         Générer
                     </Button>
@@ -191,57 +190,81 @@ function QuestionsForm({ qIndex, removeQuestion }: { qIndex: number, removeQuest
     };
     
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h4 className="font-bold text-primary">Question {qIndex + 1}</h4>
-                <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => removeQuestion(qIndex)}><Trash2 className="w-4 h-4"/></Button>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center bg-muted/50 p-3 rounded-xl border">
+                <h4 className="font-black text-primary uppercase tracking-widest text-xs">Question n°{qIndex + 1}</h4>
+                <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 rounded-lg" onClick={() => removeQuestion(qIndex)}><Trash2 className="w-4 h-4"/></Button>
             </div>
-            <div className="space-y-2">
-                <Label>Texte de la question</Label>
-                <MathToolbar onInsert={(s) => insertToTextarea("question", s)} />
-                <div className="grid md:grid-cols-2 gap-4">
-                    <Textarea {...register(`questions.${qIndex}.question`)} onFocus={e => activeTextareaRef.current = e.target} rows={4} />
-                    <div className="p-4 bg-background rounded-md border min-h-[100px]"><MathText text={watch(`questions.${qIndex}.question`) || ''} /></div>
+            
+            <div className="grid lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label className="font-bold">Énoncé de la question</Label>
+                        <MathToolbar onInsert={(s) => insertToTextarea("question", s)} />
+                        <Textarea 
+                            {...register(`questions.${qIndex}.question`)} 
+                            onFocus={e => activeTextareaRef.current = e.target} 
+                            placeholder="Entrez votre question ici... Utilisez $ pour les maths."
+                            className="rounded-xl min-h-[120px]" 
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="font-bold">Explication pédagogique</Label>
+                        <Textarea 
+                            {...register(`questions.${qIndex}.explanation`)} 
+                            onFocus={e => activeTextareaRef.current = e.target} 
+                            placeholder="Pourquoi cette réponse est-elle correcte ?"
+                            className="rounded-xl min-h-[100px] text-sm" 
+                        />
+                    </div>
+                </div>
+                
+                <div className="space-y-4">
+                    <Label className="font-bold">Aperçu du rendu final</Label>
+                    <Card className="rounded-2xl border-2 border-dashed bg-muted/10 p-6 min-h-[260px] overflow-hidden">
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <div className="font-bold text-lg leading-relaxed mb-4">
+                                <MathText text={watch(`questions.${qIndex}.question`) || '*La question s\'affichera ici...*'} />
+                            </div>
+                            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-xl border-l-4 border-indigo-500 text-xs">
+                                <p className="font-black text-indigo-700 dark:text-indigo-400 uppercase mb-1">Expert :</p>
+                                <MathText text={watch(`questions.${qIndex}.explanation`) || 'L\'explication détaillée apparaîtra après le quiz.'} />
+                            </div>
+                        </div>
+                    </Card>
                 </div>
             </div>
-            <div className="space-y-2">
-                <Label>Explication</Label>
-                <div className="grid md:grid-cols-2 gap-4">
-                    <Textarea {...register(`questions.${qIndex}.explanation`)} onFocus={e => activeTextareaRef.current = e.target} rows={3} />
-                    <div className="p-4 bg-background rounded-md border min-h-[80px] text-sm"><MathText text={watch(`questions.${qIndex}.explanation`) || ''} /></div>
-                </div>
-            </div>
-            <div>
-                <Label className="mb-2 block">Options (Cochez la/les bonne(s) réponse(s))</Label>
-                <div className="space-y-2">
-                    <Controller
-                        control={control}
-                        name={`questions.${qIndex}.correctAnswers`}
-                        render={({ field }) => (
-                          <div className="space-y-2">
-                            {options.map((option, oIdx) => {
-                              const val = watch(`questions.${qIndex}.options.${oIdx}.value`);
-                              return (
-                                <div key={option.id} className="flex items-center gap-2">
-                                  <Checkbox
-                                    checked={field.value?.includes(val)}
-                                    onCheckedChange={(checked) => {
-                                      if (!val) return;
-                                      const cur = field.value || [];
-                                      field.onChange(checked ? [...cur, val] : cur.filter(v => v !== val));
-                                    }}
-                                    disabled={!val}
-                                  />
-                                  <Input {...register(`questions.${qIndex}.options.${oIdx}.value`)} placeholder={`Option ${oIdx + 1}`} />
-                                  <Button type="button" variant="ghost" size="icon" onClick={() => removeOption(oIdx)}><X className="w-3 h-3"/></Button>
-                                </div>
-                              );
-                            })}
-                            <Button type="button" variant="outline" size="sm" className="w-full mt-2" onClick={() => appendOption({ value: '' })}>+ Ajouter une option</Button>
-                          </div>
-                        )}
-                      />
-                </div>
+
+            <div className="space-y-4">
+                <Label className="font-bold block">Options de réponse (Cochez les bonnes)</Label>
+                <Controller
+                    control={control}
+                    name={`questions.${qIndex}.correctAnswers`}
+                    render={({ field }) => (
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {options.map((option, oIdx) => {
+                          const val = watch(`questions.${qIndex}.options.${oIdx}.value`);
+                          return (
+                            <div key={option.id} className="flex items-center gap-3 p-2 rounded-xl border bg-background hover:border-primary transition-all">
+                              <Checkbox
+                                checked={field.value?.includes(val) && val !== ''}
+                                onCheckedChange={(checked) => {
+                                  if (!val) return;
+                                  const cur = field.value || [];
+                                  field.onChange(checked ? [...cur, val] : cur.filter(v => v !== val));
+                                }}
+                                disabled={!val}
+                                className="h-5 w-5 rounded-md"
+                              />
+                              <Input {...register(`questions.${qIndex}.options.${oIdx}.value`)} placeholder={`Réponse ${oIdx + 1}`} className="border-none focus-visible:ring-0 shadow-none px-0 h-8 text-sm" />
+                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => removeOption(oIdx)}><X className="w-3 h-3"/></Button>
+                            </div>
+                          );
+                        })}
+                        <Button type="button" variant="outline" size="sm" className="h-12 rounded-xl border-dashed border-2 hover:bg-primary/5" onClick={() => appendOption({ value: '' })}>+ Ajouter une option</Button>
+                      </div>
+                    )}
+                  />
             </div>
         </div>
     )
@@ -266,7 +289,7 @@ export default function QuizAdminPanel() {
     setIsLoading(true);
     try {
       const q = await getQuizzesFromFirestore();
-      setQuizzes(q);
+      setQuizzes(q.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()));
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erreur', description: 'Chargement impossible.' });
     } finally {
@@ -311,11 +334,11 @@ export default function QuizAdminPanel() {
     try {
       if (editingQuiz) await updateQuizInFirestore(editingQuiz.id!, quizData as Partial<Quiz>);
       else await saveQuizToFirestore(quizData);
-      toast({ title: 'Succès', description: 'Quiz enregistré.' });
+      toast({ title: 'Succès', description: 'Le quiz a été enregistré avec succès.' });
       setIsFormOpen(false);
       fetchQuizzes();
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Sauvegarde échouée.' });
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Échec de la sauvegarde.' });
     }
   };
 
@@ -324,24 +347,31 @@ export default function QuizAdminPanel() {
     try {
       // @ts-ignore
       const puter = window.puter;
-      const prompt = `Génère un quiz de haute qualité en français sur le sujet : "${topic}".
-      Difficulté : ${difficulty}. Nombre de questions : ${num}.
-      FORMAT JSON STRICT :
+      const prompt = `Tu es un expert concepteur de quiz pour les concours administratifs au Burkina Faso. 
+      Génère un quiz de très haute qualité sur le sujet : "${topic}".
+      Difficulté demandée : ${difficulty}. Nombre de questions : ${num}.
+      
+      RÈGLES STRICTES :
+      1. FORMAT JSON VALIDE UNIQUEMENT.
+      2. MATHS : Utilise impérativement le signe $ pour tout symbole, formule ou variable (ex: $x^2$, $U_n$).
+      3. QUALITÉ : Les questions doivent tester l'analyse, pas seulement la mémoire.
+      4. OPTIONS : Fournis 4 options crédibles par question.
+      
+      STRUCTURE JSON :
       {
-        "title": "Titre du quiz",
-        "description": "Description concise",
-        "category": "Catégorie appropriée",
+        "title": "Titre engageant",
+        "description": "Description concise du quiz",
+        "category": "Choisir parmi: ${officialCategories.join(', ')}",
         "duration_minutes": ${num * 1.5},
         "questions": [
           {
-            "question": "Texte question (utilise $ pour math)",
-            "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-            "correctAnswers": ["Option exacte"],
-            "explanation": "Explication pédagogique détaillée"
+            "question": "Énoncé de la question",
+            "options": ["Opt 1", "Opt 2", "Opt 3", "Opt 4"],
+            "correctAnswers": ["La réponse exacte (doit être identique à l'une des options)"],
+            "explanation": "Explication pédagogique riche et détaillée."
           }
         ]
-      }
-      RÈGLE : Les questions doivent être complexes, pas de simple mémoire.`;
+      }`;
 
       const response = await puter.ai.chat(prompt, { model: 'google/gemini-1.5-pro' });
       const cleanJson = response.text.replace(/```json|```/g, '').trim();
@@ -361,86 +391,211 @@ export default function QuizAdminPanel() {
         }))
       });
       setIsAiOpen(false);
-      toast({ title: "Génération réussie", description: "Vérifiez le contenu avant d'enregistrer." });
+      toast({ title: "Génération IA réussie", description: "Veuillez réviser le contenu avant d'enregistrer." });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Erreur IA', description: 'Génération échouée.' });
+      console.error(e);
+      toast({ variant: 'destructive', title: 'Erreur IA', description: 'Impossible de générer le contenu.' });
     } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-black gradient-text">Gérer les Quiz</h1>
-        <Button onClick={() => handleOpenDialog()} className="bg-primary"><PlusCircle className="mr-2 h-4 w-4"/>Nouveau</Button>
+    <div className="p-4 sm:p-6 md:p-8 space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <ClipboardList className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black gradient-text">Gestion des Quiz</h1>
+              <p className="text-sm font-medium text-muted-foreground">Administrez les banques de questions.</p>
+            </div>
+          </div>
+        </div>
+        <Button onClick={() => handleOpenDialog()} className="rounded-xl h-12 bg-primary font-bold shadow-lg">
+          <PlusCircle className="mr-2 h-5 w-5"/>Nouveau Quiz
+        </Button>
       </div>
       
-      <Card className="glassmorphism">
-        <CardContent className="pt-6">
-          {isLoading ? <div className="flex justify-center p-12"><Loader className="animate-spin"/></div> : (
-            <Table>
-              <TableHeader><TableRow><TableHead>Titre</TableHead><TableHead>Catégorie</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {quizzes.map(q => (
-                  <TableRow key={q.id}>
-                    <TableCell className="font-bold">{q.title}</TableCell>
-                    <TableCell><Badge variant="outline">{q.category}</Badge></TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(q)}><Edit className="h-4 w-4"/></Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      <Card className="glassmorphism shadow-2xl border-0 overflow-hidden rounded-3xl">
+        <CardContent className="p-0">
+          {isLoading ? (
+             <div className="flex flex-col items-center justify-center p-20 gap-4">
+                <Loader className="w-12 h-12 animate-spin text-purple-600"/>
+                <p className="font-bold text-muted-foreground animate-pulse">Chargement de la banque...</p>
+             </div>
+          ) : (
+            <div className="overflow-x-auto">
+                <Table>
+                <TableHeader className="bg-muted/30">
+                    <TableRow>
+                    <TableHead className="font-bold py-5 pl-8">Quiz</TableHead>
+                    <TableHead className="font-bold">Matière</TableHead>
+                    <TableHead className="font-bold">Difficulté</TableHead>
+                    <TableHead className="font-bold">Accès</TableHead>
+                    <TableHead className="text-right font-bold pr-8">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {quizzes.map(q => (
+                    <TableRow key={q.id} className="hover:bg-muted/10 transition-colors">
+                        <TableCell className="py-4 pl-8">
+                            <div className="font-black text-slate-800 dark:text-slate-100">{q.title}</div>
+                            <div className="text-xs text-muted-foreground">{q.total_questions} questions • {q.duration_minutes} min</div>
+                        </TableCell>
+                        <TableCell><Badge variant="outline" className="rounded-lg">{q.category}</Badge></TableCell>
+                        <TableCell>
+                            <Badge className={
+                                q.difficulty === 'difficile' ? 'bg-red-500' : 
+                                q.difficulty === 'moyen' ? 'bg-amber-500' : 'bg-green-500'
+                            }>
+                                {q.difficulty}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            <Badge variant={q.access_type === 'premium' ? 'destructive' : 'secondary'} className="rounded-lg">
+                                {q.access_type}
+                            </Badge>
+                        </TableCell>
+                        <TableCell className="text-right pr-8">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(q)} className="rounded-lg hover:text-blue-600"><Edit className="h-4 w-4"/></Button>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle>Éditeur de Quiz</DialogTitle>
+        <DialogContent className="max-w-6xl h-[95vh] flex flex-col p-0 rounded-3xl overflow-hidden shadow-2xl">
+          <DialogHeader className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 text-white flex flex-row items-center justify-between shrink-0">
+             <div className="flex items-center gap-3">
+                <Layout className="w-6 h-6 text-purple-400" />
+                <div>
+                    <DialogTitle className="text-xl font-black">Éditeur d'Excellence</DialogTitle>
+                    <p className="text-[10px] uppercase font-bold text-white/40 tracking-widest">Configuration du matériel pédagogique</p>
+                </div>
+             </div>
+             <Button variant="ghost" size="icon" className="text-white/70 hover:bg-white/10" onClick={() => setIsFormOpen(false)}><X className="w-5 h-5"/></Button>
           </DialogHeader>
+          
           <FormProvider {...formMethods}>
-             <div className="flex-1 overflow-hidden p-6 pt-2">
-                <form onSubmit={formMethods.handleSubmit(onFormSubmit)} className="h-full flex flex-col gap-4">
+             <div className="flex-1 overflow-hidden p-6 bg-slate-50/30 dark:bg-zinc-950/40">
+                <form onSubmit={formMethods.handleSubmit(onFormSubmit)} className="h-full flex flex-col gap-6">
                    <ScrollArea className="flex-1 pr-4">
-                      <div className="space-y-6">
-                        <Card className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2"><Label>Titre</Label><Input {...formMethods.register("title")} /></div>
-                            <div className="space-y-2"><Label>Catégorie</Label>
-                                <Controller name="category" control={formMethods.control} render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger><SelectValue placeholder="Catégorie..."/></SelectTrigger>
-                                        <SelectContent>{officialCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                )}/>
-                            </div>
-                        </Card>
-                        <div className="flex justify-between items-center sticky top-0 bg-background z-10 py-2">
-                            <h3 className="font-bold">Questions ({formMethods.watch('questions').length})</h3>
-                            <Button type="button" variant="outline" size="sm" onClick={() => setIsAiOpen(true)}><BrainCircuit className="mr-2 h-4 w-4"/>Générer IA</Button>
-                        </div>
-                        {formMethods.watch('questions').map((_, idx) => (
-                            <Card key={idx} className="p-4 bg-muted/30">
-                                <QuestionsForm qIndex={idx} removeQuestion={(i) => formMethods.setValue('questions', formMethods.getValues('questions').filter((_, q) => q !== i))} />
+                      <div className="space-y-8">
+                        {/* Métadonnées */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <Card className="lg:col-span-2 p-6 rounded-3xl border-0 shadow-sm space-y-4">
+                                <h3 className="font-black text-sm uppercase text-muted-foreground flex items-center gap-2"><Layout className="w-4 h-4"/> Informations Générales</h3>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label className="font-bold">Titre du Quiz</Label>
+                                        <Input {...formMethods.register("title")} placeholder="Ex: Grand Concours SVT 2025" className="rounded-xl h-11" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="font-bold">Catégorie</Label>
+                                        <Controller name="category" control={formMethods.control} render={({ field }) => (
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Sélectionnez..."/></SelectTrigger>
+                                                <SelectContent>{officialCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                        )}/>
+                                    </div>
+                                    <div className="md:col-span-2 space-y-2">
+                                        <Label className="font-bold">Description</Label>
+                                        <Input {...formMethods.register("description")} placeholder="Bref résumé des objectifs pédagogiques..." className="rounded-xl h-11" />
+                                    </div>
+                                </div>
                             </Card>
-                        ))}
+
+                            <Card className="p-6 rounded-3xl border-0 shadow-sm space-y-4">
+                                <h3 className="font-black text-sm uppercase text-muted-foreground flex items-center gap-2"><Clock className="w-4 h-4"/> Paramètres d'Accès</h3>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold uppercase">Difficulté</Label>
+                                            <Controller name="difficulty" control={formMethods.control} render={({ field }) => (
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <SelectTrigger className="rounded-lg h-9 text-xs"><SelectValue/></SelectTrigger>
+                                                    <SelectContent><SelectItem value="facile">Facile</SelectItem><SelectItem value="moyen">Moyen</SelectItem><SelectItem value="difficile">Difficile</SelectItem></SelectContent>
+                                                </Select>
+                                            )}/>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold uppercase">Durée (min)</Label>
+                                            <Input type="number" {...formMethods.register("duration_minutes")} className="rounded-lg h-9 text-xs" />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border">
+                                        <Label className="text-sm font-bold">Accès Premium</Label>
+                                        <Controller name="access_type" control={formMethods.control} render={({ field }) => (
+                                            <Switch checked={field.value === 'premium'} onCheckedChange={(v) => field.onChange(v ? 'premium' : 'gratuit')} />
+                                        )}/>
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border">
+                                        <Label className="text-sm font-bold">Concours Blanc</Label>
+                                        <Controller name="isMockExam" control={formMethods.control} render={({ field }) => (
+                                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                        )}/>
+                                    </div>
+                                    {formMethods.watch('isMockExam') && (
+                                        <div className="space-y-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl animate-in slide-in-from-top-1">
+                                            <Label className="text-xs font-bold uppercase text-amber-700 dark:text-amber-400">Programmée pour le :</Label>
+                                            <Controller name="scheduledFor" control={formMethods.control} render={({ field }) => (
+                                                <Input type="datetime-local" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(new Date(e.target.value))} className="rounded-lg h-9 text-xs border-amber-200" />
+                                            )}/>
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
+                        </div>
+
+                        {/* Questions */}
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-md z-10 py-4 px-2 border-b">
+                                <div className="flex items-center gap-3">
+                                    <Badge className="bg-primary text-white font-black rounded-full h-8 w-8 flex items-center justify-center p-0">{formMethods.watch('questions').length}</Badge>
+                                    <h3 className="font-black text-lg">Questions de l'épreuve</h3>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button type="button" variant="outline" size="sm" onClick={() => setIsAiOpen(true)} className="rounded-xl h-10 border-purple-500 text-purple-600 hover:bg-purple-50"><BrainCircuit className="mr-2 h-4 w-4"/>Génération IA</Button>
+                                    <Button type="button" size="sm" onClick={() => formMethods.setValue('questions', [...formMethods.getValues('questions'), { question: '', options: [{value:''},{value:''}], correctAnswers: [] }])} className="rounded-xl h-10 bg-primary text-white"><PlusCircle className="mr-2 h-4 w-4"/>Ajouter</Button>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-12 pb-10">
+                                {formMethods.watch('questions').map((_, idx) => (
+                                    <Card key={idx} className="p-8 rounded-[2.5rem] border-2 border-slate-100 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+                                        <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-primary to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        <QuestionsForm qIndex={idx} removeQuestion={(i) => formMethods.setValue('questions', formMethods.getValues('questions').filter((_, q) => q !== i))} />
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
                       </div>
                    </ScrollArea>
-                   <DialogFooter className="pt-4 border-t">
-                      <Button type="submit" disabled={formMethods.formState.isSubmitting} className="w-full sm:w-auto">
-                        {formMethods.formState.isSubmitting ? <Loader className="animate-spin mr-2"/> : <Save className="mr-2 h-4 w-4"/>}
-                        Enregistrer le Quiz
+                   
+                   <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t shrink-0">
+                      <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)} className="rounded-xl h-12 px-8 font-bold">Annuler</Button>
+                      <Button type="submit" disabled={formMethods.formState.isSubmitting} className="rounded-xl h-12 px-12 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black shadow-xl hover:scale-105 active:scale-95 transition-all">
+                        {formMethods.formState.isSubmitting ? <Loader className="animate-spin mr-2"/> : <Save className="mr-2 h-5 w-5"/>}
+                        Enregistrer l'examen complet
                       </Button>
-                   </DialogFooter>
+                   </div>
                 </form>
              </div>
           </FormProvider>
         </DialogContent>
       </Dialog>
+      
       <AiGeneratorDialog open={isAiOpen} onOpenChange={setIsAiOpen} onGenerate={handleGenerateAi} isGenerating={isGenerating} />
     </div>
   );
 }
+

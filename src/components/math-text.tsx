@@ -13,7 +13,7 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
       return null;
     }
 
-    // This regex looks for $$...$$ (block), $...$ (inline), or **...** (bold)
+    // Support for $$...$$ (block), $...$ (inline), and **...** (bold)
     const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$|\*\*[\s\S]*?\*\*)/g;
     const parts = text.split(regex);
 
@@ -28,10 +28,10 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
             throwOnError: false,
             displayMode: isBlock,
           });
-          return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
+          return <span key={index} className="katex-container" dangerouslySetInnerHTML={{ __html: html }} />;
         } catch (error) {
           console.error('KaTeX rendering error:', error);
-          return <code key={index} className="text-red-500 font-mono">{part}</code>;
+          return <code key={index} className="text-red-500 font-mono px-1 rounded bg-red-50">{part}</code>;
         }
       } else if (part.startsWith('**') && part.endsWith('**')) {
         // Handle Bold
@@ -45,7 +45,7 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
             {lineIndex < arr.length - 1 && <br />}
           </React.Fragment>
         ));
-        return <span key={index}>{lines}</span>;
+        return <span key={index} className="text-wrap">{lines}</span>;
       }
     });
   }, [text]);
