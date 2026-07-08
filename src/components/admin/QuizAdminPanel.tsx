@@ -128,6 +128,21 @@ function ImportJsonDialog({ open, onOpenChange, onImport }: { open: boolean, onO
         setJsonStr('');
     };
 
+    const jsonPlaceholder = `{
+  "title": "Titre du Quiz",
+  "description": "Bref résumé",
+  "category": "Mathématiques",
+  "duration_minutes": 15,
+  "questions": [
+    {
+      "question": "Calculer $2+2$",
+      "options": ["3", "4", "5"],
+      "correctAnswers": ["4"],
+      "explanation": "2 plus 2 font 4."
+    }
+  ]
+}`;
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-xl rounded-3xl">
@@ -139,7 +154,7 @@ function ImportJsonDialog({ open, onOpenChange, onImport }: { open: boolean, onO
                     <Textarea 
                         value={jsonStr} 
                         onChange={e => setJsonStr(e.target.value)} 
-                        placeholder='{"title": "...", "questions": [...] }' 
+                        placeholder={jsonPlaceholder} 
                         className="rounded-xl min-h-[300px] font-mono text-xs" 
                     />
                 </div>
