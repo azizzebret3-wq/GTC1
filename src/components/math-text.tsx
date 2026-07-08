@@ -13,13 +13,13 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
       return null;
     }
 
-    // This regex looks for $$...$$ (block) or $...$ (inline) delimiters.
-    // It will split the text into an array of strings, separating the math parts.
-    const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
+    // This regex looks for $$...$$ (block), $...$ (inline), or **...** (bold)
+    const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$|\*\*[\s\S]*?\*\*)/g;
     const parts = text.split(regex);
 
     return parts.map((part, index) => {
-      if (part.match(regex)) {
+      if (part.startsWith('$$') || (part.startsWith('$') && !part.startsWith('$$'))) {
+        // Handle Math
         const isBlock = part.startsWith('$$');
         const math = part.substring(isBlock ? 2 : 1, part.length - (isBlock ? 2 : 1));
         
@@ -28,17 +28,17 @@ const MathText: React.FC<MathTextProps> = ({ text }) => {
             throwOnError: false,
             displayMode: isBlock,
           });
-          // dangerouslySetInnerHTML is safe here because we are using KaTeX to generate the HTML,
-          // which sanitizes the input.
           return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
         } catch (error) {
           console.error('KaTeX rendering error:', error);
-          // If there's an error, display the raw math code in a noticeable way.
           return <code key={index} className="text-red-500 font-mono">{part}</code>;
         }
+      } else if (part.startsWith('**') && part.endsWith('**')) {
+        // Handle Bold
+        const boldText = part.substring(2, part.length - 2);
+        return <strong key={index} className="font-black text-foreground">{boldText}</strong>;
       } else {
-        // This is a regular text part. We need to render newlines as <br> tags.
-        // We can split by newline and join with <br />.
+        // Handle regular text and newlines
         const lines = part.split('\n').map((line, lineIndex, arr) => (
           <React.Fragment key={lineIndex}>
             {line}
