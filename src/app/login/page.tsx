@@ -126,16 +126,16 @@ export default function LoginPage() {
         <div className="relative z-10 max-w-lg space-y-8">
            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
               <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span className="text-xs font-bold uppercase tracking-wider">Votre futur commence ici</span>
+              <span className="text-xs font-bold uppercase tracking-wider">La réussite dans son intégralité</span>
            </div>
            
            <h1 className="text-6xl font-black leading-tight drop-shadow-xl">
-             Réussir n'est plus une option, <br />
-             <span className="text-yellow-300">c'est votre destin.</span>
+             Investissez dans votre avenir avec <br />
+             <span className="text-yellow-300">Intégrale Formation.</span>
            </h1>
            
            <p className="text-xl text-white/80 font-medium leading-relaxed">
-             Rejoignez la communauté GTC et accédez aux meilleurs outils de préparation pour les concours du Burkina Faso.
+             Rejoignez la communauté Intégrale et accédez aux meilleurs outils de préparation pour les concours du Burkina Faso.
            </p>
 
            <div className="grid grid-cols-2 gap-6 pt-8">
@@ -146,7 +146,7 @@ export default function LoginPage() {
               </div>
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
                 <BookOpen className="w-8 h-8 text-blue-300 mb-3" />
-                <h3 className="font-bold{">Concours Blancs</h3>
+                <h3 className="font-bold">Concours Blancs</h3>
                 <p className="text-xs text-white/60">Conditions réelles</p>
               </div>
            </div>
@@ -167,7 +167,7 @@ export default function LoginPage() {
                 Heureux de vous revoir
               </CardTitle>
               <CardDescription className="font-medium">
-                Saisissez vos identifiants pour continuer.
+                Connectez-vous à votre compte Intégrale.
               </CardDescription>
             </CardHeader>
             
@@ -267,7 +267,7 @@ export default function LoginPage() {
           </Card>
           
           <div className="text-center">
-             <p className="text-xs text-muted-foreground">© 2025 Gagne Ton Concours. Tous droits réservés.</p>
+             <p className="text-xs text-muted-foreground">© 2025 Intégrale Formation. Tous droits réservés.</p>
           </div>
         </div>
       </div>

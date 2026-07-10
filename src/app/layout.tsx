@@ -9,8 +9,8 @@ import { AuthProvider } from '@/firebase/provider';
 import OfflineNotice from '@/components/OfflineNotice';
 import Script from 'next/script';
 
-const APP_NAME = "Gagne ton concours";
-const APP_DESCRIPTION = "La plateforme la plus moderne et interactive pour réussir tes concours directs et professionnels.";
+const APP_NAME = "Intégrale Formation";
+const APP_DESCRIPTION = "La réussite dans son intégralité.";
 
 export default function RootLayout({
   children,

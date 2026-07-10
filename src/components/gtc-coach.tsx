@@ -45,7 +45,7 @@ export default function GTCCoach() {
       }
     } else {
       setMessages([
-        { role: 'model', content: `Salut **${userData?.fullName?.split(' ')[0] || 'Champion'}** ! Je suis ton Coach GTC. Comment puis-je t'aider à réussir aujourd'hui ? 🚀` }
+        { role: 'model', content: `Salut **${userData?.fullName?.split(' ')[0] || 'Champion'}** ! Je suis votre Coach Intégrale. Comment puis-je vous aider à réussir aujourd'hui ? 🚀` }
       ]);
     }
   }, [userData]);
@@ -85,7 +85,7 @@ export default function GTCCoach() {
 
       const historyContext = messages.slice(-6).map(m => `${m.role === 'user' ? 'Étudiant' : 'Coach'}: ${m.content}`).join('\n');
 
-      const systemPrompt = `Tu es "Coach GTC", le mentor expert pour les concours au Burkina Faso. 
+      const systemPrompt = `Tu es "Coach Intégrale", le mentor expert d'Intégrale Formation au Burkina Faso. 
       Utilisateur: ${userData?.fullName || 'Étudiant'}. Concours: ${userData?.competitionType || 'Direct'}.
       
       DIRECTIVES :
@@ -154,7 +154,7 @@ export default function GTCCoach() {
                 <Sparkles className="w-6 h-6 text-yellow-400 animate-pulse" />
              </div>
              <div>
-                <CardTitle className="text-sm font-black tracking-tight">Coach Stratégique</CardTitle>
+                <CardTitle className="text-sm font-black tracking-tight">Coach Intégrale</CardTitle>
                 <div className="flex items-center gap-1.5">
                    <span className="w-2 h-2 rounded-full bg-green-400"></span>
                    <span className="text-[9px] text-white/60 font-bold uppercase">En ligne</span>

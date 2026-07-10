@@ -28,7 +28,7 @@ const adminContacts = [
     { name: "Support Admin", number: "22654808048" },
 ];
 
-const whatsAppMessage = "Bonjour, je viens d'effectuer le paiement pour l'abonnement Premium. Voici ma preuve de paiement.";
+const whatsAppMessage = "Bonjour, je viens d'effectuer le paiement pour l'abonnement Premium sur Intégrale Formation. Voici ma preuve de paiement.";
 const encodedMessage = encodeURIComponent(whatsAppMessage);
 
 
@@ -56,7 +56,7 @@ export default function PremiumPage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black gradient-text">
-                  GTC Premium
+                  Intégrale Premium
                 </h1>
                 <p className="text-sm sm:text-base text-gray-600 font-medium">
                   Débloquez votre plein potentiel et maximisez vos chances de succès.

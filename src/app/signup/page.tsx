@@ -98,7 +98,7 @@ export default function SignupPage() {
                 await createNotification({
                     userId: adminId,
                     title: "Nouvel utilisateur inscrit",
-                    description: `${fullName} vient de s'inscrire sur la plateforme.`,
+                    description: `${fullName} vient de s'inscrire sur Intégrale Formation.`,
                     href: `/dashboard/admin/users`,
                 });
             }
@@ -106,7 +106,7 @@ export default function SignupPage() {
       }
       
       toast({
-        title: "Bienvenue sur GTC !",
+        title: "Bienvenue chez Intégrale Formation !",
         description: "Votre compte a été créé avec succès.",
       });
       
@@ -152,11 +152,11 @@ export default function SignupPage() {
            
            <div className="space-y-6">
              <h1 className="text-5xl font-black leading-tight">
-               Faites le premier pas vers <br />
-               <span className="text-yellow-300">votre réussite.</span>
+               La réussite dans son <br />
+               <span className="text-yellow-300">intégralité.</span>
              </h1>
              <p className="text-xl text-white/80 font-medium">
-               Rejoignez plus de 10 000 candidats qui se préparent chaque jour avec Gagne Ton Concours.
+               Rejoignez des milliers de candidats qui se forment chaque jour avec Intégrale Formation.
              </p>
            </div>
 
@@ -201,7 +201,7 @@ export default function SignupPage() {
                  <Rocket className="w-6 h-6 text-primary" />
               </div>
               <CardTitle className="text-3xl font-black gradient-text">
-                Prêt à devenir un gagnant ?
+                Rejoindre Intégrale Formation
               </CardTitle>
               <CardDescription className="font-medium">
                 Créez votre compte en moins d'une minute.
@@ -320,7 +320,7 @@ export default function SignupPage() {
           </Card>
           
           <div className="text-center mt-8">
-             <p className="text-xs text-muted-foreground">En vous inscrivant, vous acceptez nos conditions générales d'utilisation.</p>
+             <p className="text-xs text-muted-foreground">En vous inscrivant, vous acceptez nos conditions générales d'utilisation d'Intégrale Formation.</p>
           </div>
         </div>
       </div>

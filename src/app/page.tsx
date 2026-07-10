@@ -26,7 +26,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M12.52.02c1.31-.02 2.61.1 3.82.38a9.42 9.42 0 0 1 5.02 5.02 9.42 9.42 0 0 1-.38 12.38 9.42 9.42 0 0 1-5.02 5.02 9.42 9.42 0 0 1-12.38-.38 9.42 9.42 0 0 1-5.02-5.02 9.42 9.42 0 0 1 .38-12.38A9.42 9.42 0 0 1 12.52.02Z" />
+        <path d="M12.52.02c1.31-.02 2.61.1 3.82.38a9.42 9.42 0 0 1 5.02 5.02 9.42 9.42 0 0 1-.38 12.38 9.42 9.42 0 0 1-5.02 5.02 9.42 9.42 0 0 1-12.38-.38 9.42 9.42 0 0 1-5.02-5.02A9.42 9.42 0 0 1 12.52.02Z" />
         <path d="M15.54 8.52a3 3 0 0 0-2.03-2.03c.12-.02.24-.03.37-.03 1.09 0 2.18.39 3.03 1.1.2.16.4.32.57.51" />
         <path d="M15.54 8.52a3.01 3.01 0 0 0-3.3-2.43 3 3 0 0 0-2.83 2.83v5.66a3 3 0 0 1-3 3" />
     </svg>
@@ -64,7 +64,7 @@ const features = [
 
 function HomePageContent() {
   const developerWhatsappNumber = "22654808048";
-  const whatsappMessage = encodeURIComponent("Bonjour, je vous contacte depuis la plateforme 'Gagne ton concours'.");
+  const whatsappMessage = encodeURIComponent("Bonjour, je vous contacte depuis la plateforme 'Intégrale Formation'.");
   const developerWhatsappLink = `https://wa.me/${developerWhatsappNumber}?text=${whatsappMessage}`;
 
   return (
@@ -148,18 +148,18 @@ function HomePageContent() {
                 </div>
                 <Badge className="border-border/50 px-6 py-2 text-sm font-semibold shadow-lg">
                   <Sparkles className="w-4 h-4 mr-2 text-primary" />
-                  La plateforme de référence pour les concours au Burkina Faso
+                  La réussite dans son intégralité
                 </Badge>
               </div>
               
               <h1 className="text-5xl md:text-7xl font-black mb-8 text-shadow leading-tight">
                 <span className="gradient-text">
-                  Gagne ton concours
+                  Intégrale Formation
                 </span>
               </h1>
               
               <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
-                La plateforme la plus moderne et interactive pour réussir tes concours directs et professionnels.
+                La plateforme de référence pour réussir vos concours directs et professionnels au Burkina Faso.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -347,7 +347,7 @@ function HomePageContent() {
                 <AccordionItem value="item-3">
                   <AccordionTrigger>Puis-je utiliser la plateforme sur mon téléphone ?</AccordionTrigger>
                   <AccordionContent>
-                    Oui ! La plateforme "Gagne ton concours" a été conçue pour être entièrement "responsive". Que vous soyez sur un ordinateur, une tablette ou un smartphone, l'expérience est optimisée pour votre écran. Vous pouvez même l'installer sur votre téléphone pour un accès plus rapide.
+                    Oui ! La plateforme "Intégrale Formation" a été conçue pour être entièrement "responsive". Que vous soyez sur un ordinateur, une tablette ou un smartphone, l'expérience est optimisée pour votre écran. Vous pouvez même l'installer sur votre téléphone pour un accès plus rapide.
                   </AccordionContent>
                 </AccordionItem>
                  <AccordionItem value="item-4">
@@ -365,7 +365,7 @@ function HomePageContent() {
              <div className="container mx-auto">
                   <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-12 text-white shadow-2xl">
                       <h2 className="text-4xl font-black">Prêt à transformer ta réussite ?</h2>
-                      <p className="text-xl mt-4 mb-8 max-w-2xl mx-auto text-indigo-200">Rejoins dès maintenant la communauté des futurs lauréats.</p>
+                      <p className="text-xl mt-4 mb-8 max-w-2xl mx-auto text-indigo-200">Rejoignez dès maintenant la communauté des futurs lauréats.</p>
                       <Button 
                           size="lg" 
                           className="bg-white text-indigo-600 hover:bg-gray-100 font-bold px-10 py-6 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 text-lg group"
@@ -390,7 +390,7 @@ function HomePageContent() {
                 <Logo />
              </div>
             <p className="text-gray-400 text-sm max-w-md text-center md:text-left">
-              La plateforme éducative de nouvelle génération qui révolutionne la préparation aux concours au Burkina Faso.
+              La plateforme éducative de nouvelle génération qui révolutionne votre formation au Burkina Faso.
             </p>
             <div className="flex space-x-6 mt-6 md:mt-0">
                 <Link href="https://www.tiktok.com/@prepare.concours?_t=ZM-8zfqR0jZffk&_r=1" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors"><TikTokIcon className="w-6 h-6"/></Link>
@@ -400,7 +400,7 @@ function HomePageContent() {
           
           <div className="text-center pt-8 border-t border-gray-800">
             <p className="text-gray-500 text-sm">
-              © 2025 Gagne ton concours. <Link href={developerWhatsappLink} target="_blank" rel="noopener noreferrer" className="underline hover:text-white">Contacter le développeur</Link>.
+              © 2025 Intégrale Formation. <Link href={developerWhatsappLink} target="_blank" rel="noopener noreferrer" className="underline hover:text-white">Contacter le développeur</Link>.
             </p>
           </div>
         </div>

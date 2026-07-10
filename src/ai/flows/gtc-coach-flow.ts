@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Flow Genkit d'élite pour le Coach GTC.
+ * @fileOverview Flow Genkit d'élite pour le Coach Intégrale.
  * Utilise Gemini 1.5 Pro pour un raisonnement de niveau expert mondial.
  */
 
@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
   model: googleAI.model('gemini-1.5-pro'),
   input: { schema: GTCCoachInputSchema },
   output: { schema: GTCCoachOutputSchema },
-  prompt: `Tu es "Coach GTC", le mentor n°1 pour la réussite aux concours d'État au Burkina Faso. 
+  prompt: `Tu es "Coach Intégrale", le mentor n°1 pour la réussite aux concours d'État au Burkina Faso chez Intégrale Formation. 
 Ton niveau d'expertise est comparable aux meilleurs consultants en stratégie.
 
 CONTEXTE DE L'ÉTUDIANT :
