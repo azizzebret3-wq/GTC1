@@ -20,12 +20,13 @@ const premiumFeatures = [
 
 const mobileMoneyOptions = [
     { name: "Orange Money", instruction: (amount: number) => `*144*10*54808048*MONTANT#`},
-    { name: "Moov Money", instruction: (amount: number) => `*555*2*1*53017160*${amount}#`},
+    { name: "Moov Money", instruction: (amount: number) => `*555*2*1*57522170*${amount}#`},
     { name: "Wave", instruction: (amount: number) => `22654808048`},
 ];
 
 const adminContacts = [
-    { name: "Support Admin", number: "22654808048" },
+    { name: "Support Admin 1", number: "22657522170" },
+    { name: "Support Admin 2", number: "22654808048" },
 ];
 
 const whatsAppMessage = "Bonjour, je viens d'effectuer le paiement pour l'abonnement Premium sur Intégrale Formation. Voici ma preuve de paiement.";
@@ -158,8 +159,8 @@ export default function PremiumPage() {
 
             <div className="p-6 rounded-lg border bg-background/50">
                 <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><MessageCircle className="w-5 h-5 text-green-500"/>Étape 2 : Envoyez la preuve</h3>
-                <p className="text-muted-foreground mb-4">Après le paiement, faites une capture d'écran de la confirmation et envoyez-la à notre administrateur via WhatsApp.</p>
-                <div className="flex justify-center">
+                <p className="text-muted-foreground mb-4">Après le paiement, faites une capture d'écran de la confirmation et envoyez-la à un de nos administrateurs via WhatsApp.</p>
+                <div className="flex flex-wrap justify-center gap-4">
                     {adminContacts.map(admin => (
                         <Button key={admin.number} asChild className="w-full sm:w-auto h-11 bg-green-500 hover:bg-green-600 text-white px-8">
                             <Link href={`https://wa.me/${admin.number}?text=${encodedMessage}`} target="_blank">
