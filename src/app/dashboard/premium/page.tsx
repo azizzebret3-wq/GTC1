@@ -19,7 +19,7 @@ const premiumFeatures = [
 ];
 
 const mobileMoneyOptions = [
-    { name: "Orange Money", instruction: (amount: number) => `*144*10*54808048*MONTANT#`},
+    { name: "Orange Money", instruction: (amount: number) => `*144*10*65606150*MONTANT#`},
     { name: "Moov Money", instruction: (amount: number) => `*555*2*1*57522170*${amount}#`},
     { name: "Wave", instruction: (amount: number) => `22654808048`},
 ];
