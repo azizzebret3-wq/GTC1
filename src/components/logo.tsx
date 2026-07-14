@@ -6,23 +6,37 @@ export function Logo() {
   return (
     <Link href="/dashboard" className="flex items-center gap-3 group" passHref>
       <div className="relative">
-        {/* Logo inspiré par l'image fournie */}
-        <div className="w-12 h-12 relative transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[360deg]">
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-lg">
-            {/* Cercle extérieur Navy */}
-            <circle cx="50" cy="50" r="48" fill="white" stroke="#1D3557" strokeWidth="2.5"/>
-            {/* Bordure intérieure Or */}
-            <circle cx="50" cy="50" r="44" stroke="#D4AF37" strokeWidth="1.5"/>
+        {/* Logo réplique exacte de l'image fournie */}
+        <div className="w-14 h-14 relative transition-transform duration-500 group-hover:scale-105">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-xl">
+            {/* Bordures circulaires */}
+            <circle cx="50" cy="50" r="49" fill="#1D3557" />
+            <circle cx="50" cy="50" r="46" fill="#D4AF37" />
+            <circle cx="50" cy="50" r="44" fill="#FDFCF0" />
             
-            {/* Silhouette Humaine Navy */}
-            <circle cx="50" cy="32" r="6" fill="#1D3557" />
-            <path d="M50 40 C42 40 38 48 38 55 C38 62 42 68 50 72 C58 68 62 62 62 55 C62 48 58 40 50 40Z" fill="#1D3557" />
+            {/* Silhouette Humaine (Bleu) */}
+            <circle cx="53" cy="27" r="5" fill="#1D3557" />
+            <path d="M53 33 C46 33 42 40 43 48 C48 45 52 45 57 48 C58 40 54 33 53 33Z" fill="#1D3557" />
+            <path d="M53 33 L62 20" stroke="#1D3557" strokeWidth="2.5" strokeLinecap="round" />
             
-            {/* Livre Ouvert Or */}
-            <path d="M25 60 C35 55 45 58 50 65 C55 58 65 55 75 60 L75 45 C65 40 55 43 50 50 C45 43 35 40 25 45 Z" fill="#D4AF37" />
+            {/* Étoile de la réussite (Or) */}
+            <path d="M63 15 L65 18 L68 18.5 L66 20.5 L66.5 23.5 L63 22 L59.5 23.5 L60 20.5 L58 18.5 L61 18 Z" fill="#D4AF37" className="animate-pulse" />
             
-            {/* Étoile de la réussite Or */}
-            <path d="M58 22 L60 25.5 L64 26 L61 28 L62 32 L58 30.5 L54 32 L55 28 L52 26 L56 25.5 Z" fill="#D4AF37" className="animate-pulse" />
+            {/* Livre Ouvert (Or) */}
+            <path d="M25 55 C35 50 45 53 50 60 C55 53 65 50 75 55 L75 40 C65 35 55 38 50 45 C45 38 35 35 25 40 Z" fill="#D4AF37" />
+            <path d="M28 53 C38 48 45 51 50 56 C55 51 62 48 72 53" stroke="#1D3557" strokeWidth="1.5" fill="none" />
+            
+            {/* Texte INTÉGRALE */}
+            <text x="50" y="70" textAnchor="middle" fill="#1D3557" style={{ fontSize: '13px', fontWeight: '900', fontFamily: 'Arial Black' }}>INTÉGRALE</text>
+            
+            {/* Texte FORMATION avec lignes */}
+            <line x1="18" y1="76" x2="30" y2="76" stroke="#D4AF37" strokeWidth="1" />
+            <text x="50" y="79" textAnchor="middle" fill="#D4AF37" style={{ fontSize: '9px', fontWeight: '800', fontFamily: 'Arial' }}>FORMATION</text>
+            <line x1="70" y1="76" x2="82" y2="76" stroke="#D4AF37" strokeWidth="1" />
+            
+            {/* Slogan et petit livre en bas */}
+            <path d="M47 84 L50 86 L53 84 L53 82 L50 84 L47 82 Z" fill="#D4AF37" />
+            <text x="50" y="94" textAnchor="middle" fill="#1D3557" style={{ fontSize: '5.5px', fontStyle: 'italic', fontWeight: '700' }}>La réussite dans son intégralité.</text>
           </svg>
         </div>
       </div>
